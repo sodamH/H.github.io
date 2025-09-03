@@ -1,0 +1,2022 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영어단어 학습 앱</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .app-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .title {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .progress {
+            background: #f0f0f0;
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .card {
+            background: #f9f9f9;
+            border-radius: 15px;
+            padding: 40px 20px;
+            margin-bottom: 30px;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border: 2px solid #eee;
+            transition: all 0.3s ease;
+            user-select: none; /* 텍스트 선택 방지 */
+            touch-action: pan-y; /* 세로 스크롤만 허용 */
+            position: relative;
+        }
+
+        /* 카드 위의 네비게이션 버튼 */
+        .nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+            background: rgba(255, 255, 255, 0.9);
+            color: #666;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            z-index: 10;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            border-color: #667eea;
+            color: #667eea;
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .nav-btn:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: translateY(-50%) scale(1);
+        }
+
+        .nav-btn:disabled:hover {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: #ddd;
+            color: #666;
+            transform: translateY(-50%) scale(1);
+            box-shadow: none;
+        }
+
+        .nav-btn-prev {
+            left: -25px;
+        }
+
+        .nav-btn-next {
+            right: -25px;
+        }
+
+        .word {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            text-transform: lowercase;
+        }
+
+        .pronunciation {
+            font-size: 16px;
+            color: #888;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .phonetic {
+            font-family: 'Times New Roman', serif;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .korean-sound {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .meaning {
+            font-size: 18px;
+            color: #666;
+            line-height: 1.5;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+
+        .meaning.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .add-word-section {
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .input {
+            padding: 12px 15px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .stats {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .jump-section {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .jump-input {
+            width: 120px;
+            padding: 8px 12px;
+            border: 2px solid #eee;
+            border-radius: 20px;
+            font-size: 14px;
+            text-align: center;
+            transition: border-color 0.3s ease;
+        }
+
+        .jump-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 12px;
+            border-radius: 20px;
+        }
+
+        /* 찜한 단어 모드 스타일 */
+        .favorites-mode {
+            background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+        }
+
+        .favorites-mode .title {
+            color: #b8860b;
+        }
+
+        .favorites-header {
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid #ffd700;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .favorites-count {
+            color: #b8860b;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .btn-favorite-active {
+            background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+            color: #b8860b;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .btn-favorite-active:hover {
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        /* 스와이프 힌트 */
+        .swipe-hint {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+        }
+
+        .card {
+            position: relative;
+        }
+
+        .card::after {
+            content: "터치: 뜻보기 | 스와이프: 단어이동";
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: #bbb;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 480px) {
+            .nav-btn-prev {
+                left: -20px;
+            }
+
+            .nav-btn-next {
+                right: -20px;
+            }
+
+            .nav-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .app-container {
+                padding: 20px;
+            }
+            
+            .word {
+                font-size: 24px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 200px;
+            }
+        }
+
+        .pulse {
+            animation: pulse 0.5s ease;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1 class="title">📚 영어단어 학습</h1>
+            <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="stats" id="stats">단어 1 / 300</div>
+            
+            <!-- 단어 이동 기능 추가 -->
+            <div class="jump-section">
+                <input type="number" class="jump-input" id="jumpInput" placeholder="번호" min="1" max="2000">
+                <button class="btn btn-small" id="jumpBtn">이동</button>
+            </div>
+        </div>
+
+        <div class="card" id="card">
+            <button class="nav-btn nav-btn-prev" id="prevBtn">❮</button>
+            <button class="nav-btn nav-btn-next" id="nextBtn">❯</button>
+            
+            <div class="word" id="wordDisplay">apple</div>
+            <div class="pronunciation">
+                <div class="phonetic" id="phoneticDisplay">/ˈæpl/</div>
+                <div class="korean-sound" id="koreanSoundDisplay">애플</div>
+            </div>
+            <div class="meaning" id="meaningDisplay">사과</div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="speakBtn">🔊 발음 듣기</button>
+            <button class="btn btn-secondary" id="favoriteBtn">⭐ 찜</button>
+        </div>
+
+        <div class="controls" style="margin-top: 10px;">
+            <button class="btn" id="showMeaningBtn">뜻 보기</button>
+            <button class="btn btn-secondary" id="showFavoritesBtn">📑 찜한 단어</button>
+        </div>
+    </div>
+
+    <script>
+        // 초등학교 4학년 필수 영단어 300개 (발음기호와 한글발음 포함)
+        let words = [
+    { word: "often", meaning: "자주", phonetic: "/ˈɔːfən/", koreanSound: "오픈" },
+    { word: "draw", meaning: "그리다", phonetic: "/drɔː/", koreanSound: "드로" },
+    { word: "plant", meaning: "식물", phonetic: "/plænt/", koreanSound: "플랜트" },
+    { word: "mother", meaning: "어머니", phonetic: "/ˈmʌðər/", koreanSound: "마더" },
+    { word: "yesterday", meaning: "어제", phonetic: "/ˈjestərdeɪ/", koreanSound: "예스터데이" },
+    { word: "cat", meaning: "고양이", phonetic: "/kæt/", koreanSound: "캣" },
+    { word: "happy", meaning: "행복한", phonetic: "/ˈhæpi/", koreanSound: "해피" },
+    { word: "eat", meaning: "먹다", phonetic: "/iːt/", koreanSound: "이트" },
+    { word: "school", meaning: "학교", phonetic: "/skuːl/", koreanSound: "스쿨" },
+    { word: "book", meaning: "책", phonetic: "/bʊk/", koreanSound: "북" },
+    { word: "water", meaning: "물", phonetic: "/ˈwɔːtər/", koreanSound: "워터" },
+    { word: "friend", meaning: "친구", phonetic: "/frend/", koreanSound: "프렌드" },
+    { word: "love", meaning: "사랑하다", phonetic: "/lʌv/", koreanSound: "러브" },
+    { word: "go", meaning: "가다", phonetic: "/ɡoʊ/", koreanSound: "고" },
+    { word: "big", meaning: "큰", phonetic: "/bɪɡ/", koreanSound: "빅" },
+    { word: "red", meaning: "빨간색", phonetic: "/red/", koreanSound: "레드" },
+    { word: "one", meaning: "하나", phonetic: "/wʌn/", koreanSound: "원" },
+    { word: "desk", meaning: "책상", phonetic: "/desk/", koreanSound: "데스크" },
+    { word: "sun", meaning: "태양", phonetic: "/sʌn/", koreanSound: "선" },
+    { word: "play", meaning: "놀다", phonetic: "/pleɪ/", koreanSound: "플레이" },
+    { word: "house", meaning: "집", phonetic: "/haʊs/", koreanSound: "하우스" },
+    { word: "tree", meaning: "나무", phonetic: "/triː/", koreanSound: "트리" },
+    { word: "run", meaning: "달리다", phonetic: "/rʌn/", koreanSound: "런" },
+    { word: "small", meaning: "작은", phonetic: "/smɔːl/", koreanSound: "스몰" },
+    { word: "blue", meaning: "파란색", phonetic: "/bluː/", koreanSound: "블루" },
+    { word: "two", meaning: "둘", phonetic: "/tuː/", koreanSound: "투" },
+    { word: "chair", meaning: "의자", phonetic: "/tʃer/", koreanSound: "체어" },
+    { word: "moon", meaning: "달", phonetic: "/muːn/", koreanSound: "문" },
+    { word: "see", meaning: "보다", phonetic: "/siː/", koreanSound: "씨" },
+    { word: "family", meaning: "가족", phonetic: "/ˈfæməli/", koreanSound: "패밀리" },
+    { word: "flower", meaning: "꽃", phonetic: "/ˈflaʊər/", koreanSound: "플라워" },
+    { word: "walk", meaning: "걷다", phonetic: "/wɔːk/", koreanSound: "워크" },
+    { word: "sad", meaning: "슬픈", phonetic: "/sæd/", koreanSound: "새드" },
+    { word: "yellow", meaning: "노란색", phonetic: "/ˈjeloʊ/", koreanSound: "옐로우" },
+    { word: "three", meaning: "셋", phonetic: "/θriː/", koreanSound: "쓰리" },
+    { word: "pencil", meaning: "연필", phonetic: "/ˈpensl/", koreanSound: "펜슬" },
+    { word: "star", meaning: "별", phonetic: "/stɑːr/", koreanSound: "스타" },
+    { word: "sing", meaning: "노래하다", phonetic: "/sɪŋ/", koreanSound: "씽" },
+    { word: "father", meaning: "아버지", phonetic: "/ˈfɑːðər/", koreanSound: "파더" },
+    { word: "park", meaning: "공원", phonetic: "/pɑːrk/", koreanSound: "파크" },
+    { word: "read", meaning: "읽다", phonetic: "/riːd/", koreanSound: "리드" },
+    { word: "angry", meaning: "화난", phonetic: "/ˈæŋɡri/", koreanSound: "앵그리" },
+    { word: "green", meaning: "초록색", phonetic: "/ɡriːn/", koreanSound: "그린" },
+    { word: "four", meaning: "넷", phonetic: "/fɔːr/", koreanSound: "포" },
+    { word: "notebook", meaning: "공책", phonetic: "/ˈnoʊtbʊk/", koreanSound: "노트북" },
+    { word: "sky", meaning: "하늘", phonetic: "/skaɪ/", koreanSound: "스카이" },
+    { word: "dance", meaning: "춤추다", phonetic: "/dæns/", koreanSound: "댄스" },
+    { word: "baby", meaning: "아기", phonetic: "/ˈbeɪbi/", koreanSound: "베이비" },
+    { word: "car", meaning: "자동차", phonetic: "/kɑːr/", koreanSound: "카" },
+    { word: "write", meaning: "쓰다", phonetic: "/raɪt/", koreanSound: "라이트" },
+    { word: "hot", meaning: "더운", phonetic: "/hɑːt/", koreanSound: "핫" },
+    { word: "white", meaning: "흰색", phonetic: "/waɪt/", koreanSound: "화이트" },
+    { word: "five", meaning: "다섯", phonetic: "/faɪv/", koreanSound: "파이브" },
+    { word: "bag", meaning: "가방", phonetic: "/bæɡ/", koreanSound: "백" },
+    { word: "cloud", meaning: "구름", phonetic: "/klaʊd/", koreanSound: "클라우드" },
+    { word: "jump", meaning: "뛰다", phonetic: "/dʒʌmp/", koreanSound: "점프" },
+    { word: "brother", meaning: "형제", phonetic: "/ˈbrʌðər/", koreanSound: "브라더" },
+    { word: "bus", meaning: "버스", phonetic: "/bʌs/", koreanSound: "버스" },
+    { word: "sleep", meaning: "자다", phonetic: "/sliːp/", koreanSound: "슬립" },
+    { word: "cold", meaning: "추운", phonetic: "/koʊld/", koreanSound: "콜드" },
+    { word: "black", meaning: "검은색", phonetic: "/blæk/", koreanSound: "블랙" },
+    { word: "six", meaning: "여섯", phonetic: "/sɪks/", koreanSound: "식스" },
+    { word: "pen", meaning: "펜", phonetic: "/pen/", koreanSound: "펜" },
+    { word: "rain", meaning: "비", phonetic: "/reɪn/", koreanSound: "레인" },
+    { word: "swim", meaning: "수영하다", phonetic: "/swɪm/", koreanSound: "스윔" },
+    { word: "sister", meaning: "자매", phonetic: "/ˈsɪstər/", koreanSound: "시스터" },
+    { word: "train", meaning: "기차", phonetic: "/treɪn/", koreanSound: "트레인" },
+    { word: "make", meaning: "만들다", phonetic: "/meɪk/", koreanSound: "메이크" },
+    { word: "fast", meaning: "빠른", phonetic: "/fæst/", koreanSound: "패스트" },
+    { word: "orange", meaning: "주황색", phonetic: "/ˈɔːrɪndʒ/", koreanSound: "오렌지" },
+    { word: "seven", meaning: "일곱", phonetic: "/ˈsevən/", koreanSound: "세븐" },
+    { word: "ruler", meaning: "자", phonetic: "/ˈruːlər/", koreanSound: "룰러" },
+    { word: "snow", meaning: "눈", phonetic: "/snoʊ/", koreanSound: "스노우" },
+    { word: "fly", meaning: "날다", phonetic: "/flaɪ/", koreanSound: "플라이" },
+    { word: "teacher", meaning: "선생님", phonetic: "/ˈtiːtʃər/", koreanSound: "티처" },
+    { word: "boat", meaning: "보트", phonetic: "/boʊt/", koreanSound: "보트" },
+    { word: "open", meaning: "열다", phonetic: "/ˈoʊpən/", koreanSound: "오픈" },
+    { word: "slow", meaning: "느린", phonetic: "/sloʊ/", koreanSound: "슬로우" },
+    { word: "pink", meaning: "분홍색", phonetic: "/pɪŋk/", koreanSound: "핑크" },
+    { word: "eight", meaning: "여덟", phonetic: "/eɪt/", koreanSound: "에이트" },
+    { word: "eraser", meaning: "지우개", phonetic: "/ɪˈreɪsər/", koreanSound: "이레이저" },
+    { word: "wind", meaning: "바람", phonetic: "/wɪnd/", koreanSound: "윈드" },
+    { word: "cry", meaning: "울다", phonetic: "/kraɪ/", koreanSound: "크라이" },
+    { word: "student", meaning: "학생", phonetic: "/ˈstuːdənt/", koreanSound: "스튜던트" },
+    { word: "ship", meaning: "배", phonetic: "/ʃɪp/", koreanSound: "쉽" },
+    { word: "close", meaning: "닫다", phonetic: "/kloʊz/", koreanSound: "클로즈" },
+    { word: "tall", meaning: "키가 큰", phonetic: "/tɔːl/", koreanSound: "톨" },
+    { word: "purple", meaning: "보라색", phonetic: "/ˈpɜːrpl/", koreanSound: "퍼플" },
+    { word: "nine", meaning: "아홉", phonetic: "/naɪn/", koreanSound: "나인" },
+    { word: "glue", meaning: "풀", phonetic: "/ɡluː/", koreanSound: "글루" },
+    { word: "sea", meaning: "바다", phonetic: "/siː/", koreanSound: "씨" },
+    { word: "laugh", meaning: "웃다", phonetic: "/læf/", koreanSound: "래프" },
+    { word: "doctor", meaning: "의사", phonetic: "/ˈdɑːktər/", koreanSound: "닥터" },
+    { word: "airplane", meaning: "비행기", phonetic: "/ˈerpleɪn/", koreanSound: "에어플레인" },
+    { word: "talk", meaning: "말하다", phonetic: "/tɔːk/", koreanSound: "토크" },
+    { word: "short", meaning: "짧은", phonetic: "/ʃɔːrt/", koreanSound: "쇼트" },
+    { word: "brown", meaning: "갈색", phonetic: "/braʊn/", koreanSound: "브라운" },
+    { word: "ten", meaning: "열", phonetic: "/ten/", koreanSound: "텐" },
+    { word: "scissors", meaning: "가위", phonetic: "/ˈsɪzərz/", koreanSound: "시저스" },
+    { word: "river", meaning: "강", phonetic: "/ˈrɪvər/", koreanSound: "리버" },
+    { word: "clean", meaning: "청소하다", phonetic: "/kliːn/", koreanSound: "클린" },
+    { word: "police", meaning: "경찰", phonetic: "/pəˈliːs/", koreanSound: "폴리스" },
+    { word: "bike", meaning: "자전거", phonetic: "/baɪk/", koreanSound: "바이크" },
+    { word: "wash", meaning: "씻다", phonetic: "/wɑːʃ/", koreanSound: "워시" },
+    { word: "long", meaning: "긴", phonetic: "/lɔːŋ/", koreanSound: "롱" },
+    { word: "gray", meaning: "회색", phonetic: "/ɡreɪ/", koreanSound: "그레이" },
+    { word: "eleven", meaning: "열하나", phonetic: "/ɪˈlevən/", koreanSound: "일레븐" },
+    { word: "map", meaning: "지도", phonetic: "/mæp/", koreanSound: "맵" },
+    { word: "mountain", meaning: "산", phonetic: "/ˈmaʊntn/", koreanSound: "마운틴" },
+    { word: "cook", meaning: "요리하다", phonetic: "/kʊk/", koreanSound: "쿡" },
+    { word: "farmer", meaning: "농부", phonetic: "/ˈfɑːrmər/", koreanSound: "파머" },
+    { word: "taxi", meaning: "택시", phonetic: "/ˈtæksi/", koreanSound: "택시" },
+    { word: "study", meaning: "공부하다", phonetic: "/ˈstʌdi/", koreanSound: "스터디" },
+    { word: "beautiful", meaning: "아름다운", phonetic: "/ˈbjuːtɪfl/", koreanSound: "뷰티풀" },
+    { word: "gold", meaning: "금색", phonetic: "/ɡoʊld/", koreanSound: "골드" },
+    { word: "twelve", meaning: "열둘", phonetic: "/twelv/", koreanSound: "트웰브" },
+    { word: "clock", meaning: "시계", phonetic: "/klɑːk/", koreanSound: "클락" },
+    { word: "island", meaning: "섬", phonetic: "/ˈaɪlənd/", koreanSound: "아일랜드" },
+    { word: "help", meaning: "돕다", phonetic: "/help/", koreanSound: "헬프" },
+    { word: "singer", meaning: "가수", phonetic: "/ˈsɪŋər/", koreanSound: "싱어" },
+    { word: "truck", meaning: "트럭", phonetic: "/trʌk/", koreanSound: "트럭" },
+    { word: "listen", meaning: "듣다", phonetic: "/ˈlɪsən/", koreanSound: "리슨" },
+    { word: "cute", meaning: "귀여운", phonetic: "/kjuːt/", koreanSound: "큐트" },
+    { word: "silver", meaning: "은색", phonetic: "/ˈsɪlvər/", koreanSound: "실버" },
+    { word: "twenty", meaning: "스물", phonetic: "/ˈtwenti/", koreanSound: "트웬티" },
+    { word: "door", meaning: "문", phonetic: "/dɔːr/", koreanSound: "도어" },
+    { word: "beach", meaning: "해변", phonetic: "/biːtʃ/", koreanSound: "비치" },
+    { word: "think", meaning: "생각하다", phonetic: "/θɪŋk/", koreanSound: "씽크" },
+    { word: "cook", meaning: "요리사", phonetic: "/kʊk/", koreanSound: "쿡" },
+    { word: "subway", meaning: "지하철", phonetic: "/ˈsʌbweɪ/", koreanSound: "서브웨이" },
+    { word: "watch", meaning: "보다", phonetic: "/wɑːtʃ/", koreanSound: "워치" },
+    { word: "kind", meaning: "친절한", phonetic: "/kaɪnd/", koreanSound: "카인드" },
+    { word: "color", meaning: "색깔", phonetic: "/ˈkʌlər/", koreanSound: "컬러" },
+    { word: "hundred", meaning: "백", phonetic: "/ˈhʌndrəd/", koreanSound: "헌드레드" },
+    { word: "window", meaning: "창문", phonetic: "/ˈwɪndoʊ/", koreanSound: "윈도우" },
+    { word: "farm", meaning: "농장", phonetic: "/fɑːrm/", koreanSound: "팜" },
+    { word: "want", meaning: "원하다", phonetic: "/wɑːnt/", koreanSound: "원트" },
+    { word: "pilot", meaning: "조종사", phonetic: "/ˈpaɪlət/", koreanSound: "파일럿" },
+    { word: "rocket", meaning: "로켓", phonetic: "/ˈrɑːkɪt/", koreanSound: "로켓" },
+    { word: "like", meaning: "좋아하다", phonetic: "/laɪk/", koreanSound: "라이크" },
+    { word: "smart", meaning: "똑똑한", phonetic: "/smɑːrt/", koreanSound: "스마트" },
+    { word: "animal", meaning: "동물", phonetic: "/ˈænɪməl/", koreanSound: "애니멀" },
+    { word: "first", meaning: "첫 번째", phonetic: "/fɜːrst/", koreanSound: "퍼스트" },
+    { word: "floor", meaning: "바닥", phonetic: "/flɔːr/", koreanSound: "플로어" },
+    { word: "zoo", meaning: "동물원", phonetic: "/zuː/", koreanSound: "주" },
+    { word: "have", meaning: "가지다", phonetic: "/hæv/", koreanSound: "해브" },
+    { word: "artist", meaning: "화가", phonetic: "/ˈɑːrtɪst/", koreanSound: "아티스트" },
+    { word: "motorcycle", meaning: "오토바이", phonetic: "/ˈmoʊtərsaɪkl/", koreanSound: "모터사이클" },
+    { word: "live", meaning: "살다", phonetic: "/lɪv/", koreanSound: "리브" },
+    { word: "brave", meaning: "용감한", phonetic: "/breɪv/", koreanSound: "브레이브" },
+    { word: "dog", meaning: "개", phonetic: "/dɔːɡ/", koreanSound: "도그" },
+    { word: "second", meaning: "두 번째", phonetic: "/ˈsekənd/", koreanSound: "세컨드" },
+    { word: "wall", meaning: "벽", phonetic: "/wɔːl/", koreanSound: "월" },
+    { word: "store", meaning: "가게", phonetic: "/stɔːr/", koreanSound: "스토어" },
+    { word: "give", meaning: "주다", phonetic: "/ɡɪv/", koreanSound: "기브" },
+    { word: "firefighter", meaning: "소방관", phonetic: "/ˈfaɪərfaɪtər/", koreanSound: "파이어파이터" },
+    { word: "food", meaning: "음식", phonetic: "/fuːd/", koreanSound: "푸드" },
+    { word: "get", meaning: "얻다", phonetic: "/ɡet/", koreanSound: "겟" },
+    { word: "busy", meaning: "바쁜", phonetic: "/ˈbɪzi/", koreanSound: "비지" },
+    { word: "puppy", meaning: "강아지", phonetic: "/ˈpʌpi/", koreanSound: "퍼피" },
+    { word: "third", meaning: "세 번째", phonetic: "/θɜːrd/", koreanSound: "써드" },
+    { word: "roof", meaning: "지붕", phonetic: "/ruːf/", koreanSound: "루프" },
+    { word: "market", meaning: "시장", phonetic: "/ˈmɑːrkɪt/", koreanSound: "마켓" },
+    { word: "take", meaning: "가져가다", phonetic: "/teɪk/", koreanSound: "테이크" },
+    { word: "nurse", meaning: "간호사", phonetic: "/nɜːrs/", koreanSound: "널스" },
+    { word: "apple", meaning: "사과", phonetic: "/ˈæpəl/", koreanSound: "애플" },
+    { word: "know", meaning: "알다", phonetic: "/noʊ/", koreanSound: "노우" },
+    { word: "tired", meaning: "피곤한", phonetic: "/ˈtaɪərd/", koreanSound: "타이어드" },
+    { word: "kitten", meaning: "아기 고양이", phonetic: "/ˈkɪtn/", koreanSound: "키튼" },
+    { word: "number", meaning: "숫자", phonetic: "/ˈnʌmbər/", koreanSound: "넘버" },
+    { word: "kitchen", meaning: "주방", phonetic: "/ˈkɪtʃɪn/", koreanSound: "키친" },
+    { word: "hospital", meaning: "병원", phonetic: "/ˈhɑːspɪtl/", koreanSound: "하스피털" },
+    { word: "say", meaning: "말하다", phonetic: "/seɪ/", koreanSound: "세이" },
+    { word: "dentist", meaning: "치과의사", phonetic: "/ˈdentɪst/", koreanSound: "덴티스트" },
+    { word: "banana", meaning: "바나나", phonetic: "/bəˈnænə/", koreanSound: "버내너" },
+    { word: "need", meaning: "필요하다", phonetic: "/niːd/", koreanSound: "니드" },
+    { word: "hungry", meaning: "배고픈", phonetic: "/ˈhʌŋɡri/", koreanSound: "헝그리" },
+    { word: "bird", meaning: "새", phonetic: "/bɜːrd/", koreanSound: "버드" },
+    { word: "Monday", meaning: "월요일", phonetic: "/ˈmʌndeɪ/", koreanSound: "먼데이" },
+    { word: "bedroom", meaning: "침실", phonetic: "/ˈbedruːm/", koreanSound: "베드룸" },
+    { word: "bank", meaning: "은행", phonetic: "/bæŋk/", koreanSound: "뱅크" },
+    { word: "come", meaning: "오다", phonetic: "/kʌm/", koreanSound: "컴" },
+    { word: "baker", meaning: "제빵사", phonetic: "/ˈbeɪkər/", koreanSound: "베이커" },
+    { word: "grape", meaning: "포도", phonetic: "/ɡreɪp/", koreanSound: "그레이프" },
+    { word: "feel", meaning: "느끼다", phonetic: "/fiːl/", koreanSound: "필" },
+    { word: "thirsty", meaning: "목마른", phonetic: "/ˈθɜːrsti/", koreanSound: "썰스티" },
+    { word: "fish", meaning: "물고기", phonetic: "/fɪʃ/", koreanSound: "피쉬" },
+    { word: "Tuesday", meaning: "화요일", phonetic: "/ˈtuːzdeɪ/", koreanSound: "튜즈데이" },
+    { word: "living room", meaning: "거실", phonetic: "/ˈlɪvɪŋ ruːm/", koreanSound: "리빙룸" },
+    { word: "library", meaning: "도서관", phonetic: "/ˈlaɪbreri/", koreanSound: "라이브러리" },
+    { word: "look", meaning: "보다", phonetic: "/lʊk/", koreanSound: "룩" },
+    { word: "job", meaning: "직업", phonetic: "/dʒɑːb/", koreanSound: "잡" },
+    { word: "strawberry", meaning: "딸기", phonetic: "/ˈstrɔːberi/", koreanSound: "스트로베리" },
+    { word: "find", meaning: "찾다", phonetic: "/faɪnd/", koreanSound: "파인드" },
+    { word: "sick", meaning: "아픈", phonetic: "/sɪk/", koreanSound: "씩" },
+    { word: "lion", meaning: "사자", phonetic: "/ˈlaɪən/", koreanSound: "라이언" },
+    { word: "Wednesday", meaning: "수요일", phonetic: "/ˈwenzdeɪ/", koreanSound: "웬즈데이" },
+    { word: "bathroom", meaning: "화장실", phonetic: "/ˈbæθruːm/", koreanSound: "배스룸" },
+    { word: "post office", meaning: "우체국", phonetic: "/poʊst ˈɔːfɪs/", koreanSound: "포스트 오피스" },
+    { word: "use", meaning: "사용하다", phonetic: "/juːz/", koreanSound: "유즈" },
+    { word: "work", meaning: "일하다", phonetic: "/wɜːrk/", koreanSound: "워크" },
+    { word: "watermelon", meaning: "수박", phonetic: "/ˈwɔːtərmelən/", koreanSound: "워터멜론" },
+    { word: "tell", meaning: "말하다", phonetic: "/tel/", koreanSound: "텔" },
+    { word: "full", meaning: "배부른", phonetic: "/fʊl/", koreanSound: "풀" },
+    { word: "tiger", meaning: "호랑이", phonetic: "/ˈtaɪɡər/", koreanSound: "타이거" },
+    { word: "Thursday", meaning: "목요일", phonetic: "/ˈθɜːrzdeɪ/", koreanSound: "썰즈데이" },
+    { word: "garden", meaning: "정원", phonetic: "/ˈɡɑːrdn/", koreanSound: "가든" },
+    { word: "restaurant", meaning: "식당", phonetic: "/ˈrestərɑːnt/", koreanSound: "레스토랑" },
+    { word: "ask", meaning: "묻다", phonetic: "/æsk/", koreanSound: "애스크" },
+    { word: "head", meaning: "머리", phonetic: "/hed/", koreanSound: "헤드" },
+    { word: "peach", meaning: "복숭아", phonetic: "/piːtʃ/", koreanSound: "피치" },
+    { word: "call", meaning: "부르다", phonetic: "/kɔːl/", koreanSound: "콜" },
+    { word: "sleepy", meaning: "졸린", phonetic: "/ˈsliːpi/", koreanSound: "슬리피" },
+    { word: "bear", meaning: "곰", phonetic: "/ber/", koreanSound: "베어" },
+    { word: "Friday", meaning: "금요일", phonetic: "/ˈfraɪdeɪ/", koreanSound: "프라이데이" },
+    { word: "room", meaning: "방", phonetic: "/ruːm/", koreanSound: "룸" },
+    { "word": "police station", "meaning": "경찰서", "phonetic": "/pəˈliːs ˈsteɪʃən/", "koreanSound": "폴리스 스테이션" },
+    { word: "try", meaning: "시도하다", phonetic: "/traɪ/", koreanSound: "트라이" },
+    { word: "face", meaning: "얼굴", phonetic: "/feɪs/", koreanSound: "페이스" },
+    { word: "pear", meaning: "배", phonetic: "/per/", koreanSound: "페어" },
+    { word: "start", meaning: "시작하다", phonetic: "/stɑːrt/", koreanSound: "스타트" },
+    { word: "excited", meaning: "신이 난", phonetic: "/ɪkˈsaɪtɪd/", koreanSound: "익사이티드" },
+    { word: "monkey", meaning: "원숭이", phonetic: "/ˈmʌŋki/", koreanSound: "멍키" },
+    { word: "Saturday", meaning: "토요일", phonetic: "/ˈsætərdeɪ/", koreanSound: "새터데이" },
+    { word: "table", meaning: "테이블", phonetic: "/ˈteɪbl/", koreanSound: "테이블" },
+    { word: "fire station", meaning: "소방서", phonetic: "/ˈfaɪər ˈsteɪʃən/", koreanSound: "파이어 스테이션" },
+    { word: "stop", meaning: "멈추다", phonetic: "/stɑːp/", koreanSound: "스탑" },
+    { word: "eye", meaning: "눈", phonetic: "/aɪ/", koreanSound: "아이" },
+    { word: "cherry", meaning: "체리", phonetic: "/ˈtʃeri/", koreanSound: "체리" },
+    { word: "move", meaning: "움직이다", phonetic: "/muːv/", koreanSound: "무브" },
+    { word: "surprised", meaning: "놀란", phonetic: "/sərˈpraɪzd/", koreanSound: "서프라이즈드" },
+    { word: "elephant", meaning: "코끼리", phonetic: "/ˈelɪfənt/", koreanSound: "엘리펀트" },
+    { word: "Sunday", meaning: "일요일", phonetic: "/ˈsʌndeɪ/", koreanSound: "선데이" },
+    { word: "sofa", meaning: "소파", phonetic: "/ˈsoʊfə/", koreanSound: "소파" },
+    { word: "bakery", meaning: "빵집", phonetic: "/ˈbeɪkəri/", koreanSound: "베이커리" },
+    { word: "turn", meaning: "돌다", phonetic: "/tɜːrn/", koreanSound: "턴" },
+    { word: "nose", meaning: "코", phonetic: "/noʊz/", koreanSound: "노우즈" },
+    { word: "lemon", meaning: "레몬", phonetic: "/ˈlemən/", koreanSound: "레몬" },
+    { word: "wait", meaning: "기다리다", phonetic: "/weɪt/", koreanSound: "웨이트" },
+    { word: "scared", meaning: "무서운", phonetic: "/skerd/", koreanSound: "스케어드" },
+    { word: "rabbit", meaning: "토끼", phonetic: "/ˈræbɪt/", koreanSound: "래빗" },
+    { word: "today", meaning: "오늘", phonetic: "/təˈdeɪ/", koreanSound: "투데이" },
+    { word: "bed", meaning: "침대", phonetic: "/bed/", koreanSound: "베드" },
+    { word: "playground", meaning: "놀이터", phonetic: "/ˈpleɪɡraʊnd/", koreanSound: "플레이그라운드" },
+    { word: "wear", meaning: "입다", phonetic: "/wer/", koreanSound: "웨어" },
+    { word: "mouth", meaning: "입", phonetic: "/maʊθ/", koreanSound: "마우스" },
+    { word: "melon", meaning: "멜론", phonetic: "/ˈmelən/", koreanSound: "멜론" },
+    { word: "leave", meaning: "떠나다", phonetic: "/liːv/", koreanSound: "리브" },
+    { word: "bored", meaning: "지루한", phonetic: "/bɔːrd/", koreanSound: "보어드" },
+    { word: "pig", meaning: "돼지", phonetic: "/pɪɡ/", koreanSound: "피그" },
+    { word: "tomorrow", meaning: "내일", phonetic: "/təˈmɑːroʊ/", koreanSound: "투모로우" },
+    { word: "lamp", meaning: "램프", phonetic: "/læmp/", koreanSound: "램프" },
+    { word: "classroom", meaning: "교실", phonetic: "/ˈklæsrum/", koreanSound: "클래스룸" },
+    { word: "buy", meaning: "사다", phonetic: "/baɪ/", koreanSound: "바이" },
+    { word: "ear", meaning: "귀", phonetic: "/ɪr/", koreanSound: "이어" },
+    { word: "kiwi", meaning: "키위", phonetic: "/ˈkiːwiː/", koreanSound: "키위" },
+    { word: "meet", meaning: "만나다", phonetic: "/miːt/", koreanSound: "미트" },
+    { word: "good", meaning: "좋은", phonetic: "/ɡʊd/", koreanSound: "굿" },
+    { word: "sheep", meaning: "양", phonetic: "/ʃiːp/", koreanSound: "쉽" },
+    { word: "week", meaning: "주", phonetic: "/wiːk/", koreanSound: "위크" },
+    { word: "computer", meaning: "컴퓨터", phonetic: "/kəmˈpjuːtər/", koreanSound: "컴퓨터" },
+    { word: "city", meaning: "도시", phonetic: "/ˈsɪti/", koreanSound: "시티" },
+    { word: "sell", meaning: "팔다", phonetic: "/sel/", koreanSound: "셀" },
+    { word: "hand", meaning: "손", phonetic: "/hænd/", koreanSound: "핸드" },
+    { word: "pineapple", meaning: "파인애플", phonetic: "/ˈpaɪnæpəl/", koreanSound: "파인애플" },
+    { word: "sit", meaning: "앉다", phonetic: "/sɪt/", koreanSound: "싯" },
+    { word: "bad", meaning: "나쁜", phonetic: "/bæd/", koreanSound: "배드" },
+    { word: "cow", meaning: "소", phonetic: "/kaʊ/", koreanSound: "카우" },
+    { word: "day", meaning: "날", phonetic: "/deɪ/", koreanSound: "데이" },
+    { word: "picture", meaning: "그림", phonetic: "/ˈpɪktʃər/", koreanSound: "픽처" },
+    { word: "country", meaning: "나라", phonetic: "/ˈkʌntri/", koreanSound: "컨트리" },
+    { word: "bring", meaning: "가져오다", phonetic: "/brɪŋ/", koreanSound: "브링" },
+    { word: "arm", meaning: "팔", phonetic: "/ɑːrm/", koreanSound: "암" },
+    { word: "tomato", meaning: "토마토", phonetic: "/təˈmeɪtoʊ/", koreanSound: "토메이토" },
+    { word: "stand", meaning: "서다", phonetic: "/stænd/", koreanSound: "스탠드" },
+    { word: "great", meaning: "훌륭한", phonetic: "/ɡreɪt/", koreanSound: "그레이트" },
+    { word: "horse", meaning: "말", phonetic: "/hɔːrs/", koreanSound: "홀스" },
+    { word: "time", meaning: "시간", phonetic: "/taɪm/", koreanSound: "타임" },
+    { word: "blanket", meaning: "담요", phonetic: "/ˈblæŋkɪt/", koreanSound: "블랭킷" },
+    { word: "town", meaning: "마을", phonetic: "/taʊn/", koreanSound: "타운" },
+    { word: "send", meaning: "보내다", phonetic: "/send/", koreanSound: "센드" },
+    { word: "leg", meaning: "다리", phonetic: "/leɡ/", koreanSound: "레그" },
+    { word: "vegetable", meaning: "채소", phonetic: "/ˈvedʒtəbl/", koreanSound: "베지터블" },
+    { word: "learn", meaning: "배우다", phonetic: "/lɜːrn/", koreanSound: "런" },
+    { word: "nice", meaning: "멋진", phonetic: "/naɪs/", koreanSound: "나이스" },
+    { word: "duck", meaning: "오리", phonetic: "/dʌk/", koreanSound: "덕" },
+    { word: "morning", meaning: "아침", phonetic: "/ˈmɔːrnɪŋ/", koreanSound: "모닝" },
+    { word: "pillow", meaning: "베개", phonetic: "/ˈpɪloʊ/", koreanSound: "필로우" },
+    { word: "village", meaning: "마을", phonetic: "/ˈvɪlɪdʒ/", koreanSound: "빌리지" },
+    { word: "show", meaning: "보여주다", phonetic: "/ʃoʊ/", koreanSound: "쇼" },
+    { word: "foot", meaning: "발", phonetic: "/fʊt/", koreanSound: "풋" },
+    { word: "carrot", meaning: "당근", phonetic: "/ˈkærət/", koreanSound: "캐럿" },
+    { word: "teach", meaning: "가르치다", phonetic: "/tiːtʃ/", koreanSound: "티치" },
+    { word: "pretty", meaning: "예쁜", phonetic: "/ˈprɪti/", koreanSound: "프리티" },
+    { word: "chicken", meaning: "닭", phonetic: "/ˈtʃɪkɪn/", koreanSound: "치킨" },
+    { word: "afternoon", meaning: "오후", phonetic: "/ˌæftərˈnuːn/", koreanSound: "애프터눈" },
+    { word: "mirror", meaning: "거울", phonetic: "/ˈmɪrər/", koreanSound: "미러" },
+    { word: "world", meaning: "세계", phonetic: "/wɜːrld/", koreanSound: "월드" },
+    { word: "begin", meaning: "시작하다", phonetic: "/bɪˈɡɪn/", koreanSound: "비긴" },
+    { word: "hair", meaning: "머리카락", phonetic: "/her/", koreanSound: "헤어" },
+    { word: "potato", meaning: "감자", phonetic: "/pəˈteɪtoʊ/", koreanSound: "포테이토" },
+    { word: "catch", meaning: "잡다", phonetic: "/kætʃ/", koreanSound: "캐치" },
+    { word: "ugly", meaning: "못생긴", phonetic: "/ˈʌɡli/", koreanSound: "어글리" },
+    { word: "frog", meaning: "개구리", phonetic: "/frɔːɡ/", koreanSound: "프로그" },
+    { word: "evening", meaning: "저녁", phonetic: "/ˈiːvnɪŋ/", koreanSound: "이브닝" },
+    { word: "towel", meaning: "수건", phonetic: "/ˈtaʊəl/", koreanSound: "타월" },
+    { word: "home", meaning: "집", phonetic: "/hoʊm/", koreanSound: "홈" },
+    { word: "break", meaning: "깨다", phonetic: "/breɪk/", koreanSound: "브레이크" },
+    { word: "body", meaning: "몸", phonetic: "/ˈbɑːdi/", koreanSound: "바디" },
+    { word: "onion", meaning: "양파", phonetic: "/ˈʌnjən/", koreanSound: "어니언" },
+    { word: "throw", meaning: "던지다", phonetic: "/θroʊ/", koreanSound: "쓰로우" },
+    { word: "delicious", meaning: "맛있는", phonetic: "/dɪˈlɪʃəs/", koreanSound: "딜리셔스" },
+    { word: "snake", meaning: "뱀", phonetic: "/sneɪk/", koreanSound: "스네이크" },
+    { word: "night", meaning: "밤", phonetic: "/naɪt/", koreanSound: "나이트" },
+    { word: "soap", meaning: "비누", phonetic: "/soʊp/", koreanSound: "소프" },
+    { word: "road", meaning: "길", phonetic: "/roʊd/", koreanSound: "로드" },
+    { word: "build", meaning: "짓다", phonetic: "/bɪld/", koreanSound: "빌드" },
+    { word: "finger", meaning: "손가락", phonetic: "/ˈfɪŋɡər/", koreanSound: "핑거" },
+    { word: "corn", meaning: "옥수수", phonetic: "/kɔːrn/", koreanSound: "콘" },
+    { word: "push", meaning: "밀다", phonetic: "/pʊʃ/", koreanSound: "푸시" },
+    { word: "sweet", meaning: "달콤한", phonetic: "/swiːt/", koreanSound: "스위트" },
+    { word: "wolf", meaning: "늑대", phonetic: "/wʊlf/", koreanSound: "울프" },
+    { word: "clock", meaning: "시계", phonetic: "/klɑːk/", koreanSound: "클락" },
+    { word: "shampoo", meaning: "샴푸", phonetic: "/ʃæmˈpuː/", koreanSound: "샴푸" },
+    { word: "street", meaning: "거리", phonetic: "/striːt/", koreanSound: "스트리트" },
+    { word: "pull", meaning: "당기다", phonetic: "/pʊl/", koreanSound: "풀" },
+    { word: "toe", meaning: "발가락", phonetic: "/toʊ/", koreanSound: "토" },
+    { word: "mushroom", meaning: "버섯", phonetic: "/ˈmʌʃruːm/", koreanSound: "머쉬룸" },
+    { word: "climb", meaning: "오르다", phonetic: "/klaɪm/", koreanSound: "클라임" },
+    { word: "sour", meaning: "신", phonetic: "/ˈsaʊər/", koreanSound: "사워" },
+    { word: "fox", meaning: "여우", phonetic: "/fɑːks/", koreanSound: "팍스" },
+    { word: "hour", meaning: "시간", phonetic: "/ˈaʊər/", koreanSound: "아워" },
+    { word: "toothbrush", meaning: "칫솔", phonetic: "/ˈtuːθbrʌʃ/", koreanSound: "투스브러쉬" },
+    { word: "building", meaning: "건물", phonetic: "/ˈbɪldɪŋ/", koreanSound: "빌딩" },
+    { word: "kick", meaning: "차다", phonetic: "/kɪk/", koreanSound: "킥" },
+    { word: "shoulder", meaning: "어깨", phonetic: "/ˈʃoʊldər/", koreanSound: "숄더" },
+    { word: "bean", meaning: "콩", phonetic: "/biːn/", koreanSound: "빈" },
+    { word: "cut", meaning: "자르다", phonetic: "/kʌt/", koreanSound: "컷" },
+    { word: "salty", meaning: "짠", phonetic: "/ˈsɔːlti/", koreanSound: "솔티" },
+    { word: "turtle", meaning: "거북이", phonetic: "/ˈtɜːrtl/", koreanSound: "터틀" },
+    { word: "minute", meaning: "분", phonetic: "/ˈmɪnɪt/", koreanSound: "미닛" },
+    { word: "toothpaste", meaning: "치약", phonetic: "/ˈtuːθpeɪst/", koreanSound: "투스페이스트" },
+    { word: "bridge", meaning: "다리", phonetic: "/brɪdʒ/", koreanSound: "브리지" },
+    { word: "hit", meaning: "치다", phonetic: "/hɪt/", koreanSound: "힛" },
+    { word: "knee", meaning: "무릎", phonetic: "/niː/", koreanSound: "니" },
+    { word: "cucumber", meaning: "오이", phonetic: "/ˈkjuːkʌmbər/", koreanSound: "큐컴버" },
+    { word: "ride", meaning: "타다", phonetic: "/raɪd/", koreanSound: "라이드" },
+    { word: "spicy", meaning: "매운", phonetic: "/ˈspaɪsi/", koreanSound: "스파이시" },
+    { word: "whale", meaning: "고래", phonetic: "/weɪl/", koreanSound: "웨일" },
+    { word: "second", meaning: "초", phonetic: "/ˈsekənd/", koreanSound: "세컨드" },
+    { word: "clothes", meaning: "옷", phonetic: "/kloʊðz/", koreanSound: "클로즈" },
+    { word: "station", meaning: "역", phonetic: "/ˈsteɪʃən/", koreanSound: "스테이션" },
+    { word: "arrive", meaning: "도착하다", phonetic: "/əˈraɪv/", koreanSound: "어라이브" },
+    { word: "back", meaning: "등", phonetic: "/bæk/", koreanSound: "백" },
+    { word: "bread", meaning: "빵", phonetic: "/bred/", koreanSound: "브레드" },
+    { word: "finish", meaning: "끝내다", phonetic: "/ˈfɪnɪʃ/", koreanSound: "피니쉬" },
+    { word: "difficult", meaning: "어려운", phonetic: "/ˈdɪfɪkəlt/", koreanSound: "디피컬트" },
+    { word: "dolphin", meaning: "돌고래", phonetic: "/ˈdɑːlfɪn/", koreanSound: "돌핀" },
+    { word: "season", meaning: "계절", phonetic: "/ˈsiːzən/", koreanSound: "시즌" },
+    { word: "shirt", meaning: "셔츠", phonetic: "/ʃɜːrt/", koreanSound: "셔트" },
+    { word: "airport", meaning: "공항", phonetic: "/ˈerpɔːrt/", koreanSound: "에어포트" },
+    { word: "win", meaning: "이기다", phonetic: "/wɪn/", koreanSound: "윈" },
+    { word: "neck", meaning: "목", phonetic: "/nek/", koreanSound: "넥" },
+    { word: "rice", meaning: "밥", phonetic: "/raɪs/", koreanSound: "라이스" },
+    { word: "lose", meaning: "지다", phonetic: "/luːz/", koreanSound: "루즈" },
+    { word: "easy", meaning: "쉬운", phonetic: "/ˈiːzi/", koreanSound: "이지" },
+    { word: "shark", meaning: "상어", phonetic: "/ʃɑːrk/", koreanSound: "샤크" },
+    { word: "spring", meaning: "봄", phonetic: "/sprɪŋ/", koreanSound: "스프링" },
+    { word: "pants", meaning: "바지", phonetic: "/pænts/", koreanSound: "팬츠" },
+    { word: "museum", meaning: "박물관", phonetic: "/mjuˈziːəm/", koreanSound: "뮤지엄" },
+    { word: "shout", meaning: "소리치다", phonetic: "/ʃaʊt/", koreanSound: "샤우트" },
+    { word: "stomach", meaning: "배", phonetic: "/ˈstʌmək/", koreanSound: "스터먹" },
+    { word: "cheese", meaning: "치즈", phonetic: "/tʃiːz/", koreanSound: "치즈" },
+    { word: "practice", meaning: "연습하다", phonetic: "/ˈpræktɪs/", koreanSound: "프랙티스" },
+    { word: "same", meaning: "같은", phonetic: "/seɪm/", koreanSound: "세임" },
+    { word: "ant", meaning: "개미", phonetic: "/ænt/", koreanSound: "앤트" },
+    { word: "summer", meaning: "여름", phonetic: "/ˈsʌmər/", koreanSound: "서머" },
+    { word: "dress", meaning: "드레스", phonetic: "/dres/", koreanSound: "드레스" },
+    { word: "art gallery", meaning: "미술관", phonetic: "/ɑːrt ˈɡæləri/", koreanSound: "아트 갤러리" },
+    { word: "smile", meaning: "미소짓다", phonetic: "/smaɪl/", koreanSound: "스마일" },
+    { word: "heart", meaning: "심장", phonetic: "/hɑːrt/", koreanSound: "하트" },
+    { word: "milk", meaning: "우유", phonetic: "/mɪlk/", koreanSound: "밀크" },
+    { word: "dream", meaning: "꿈꾸다", phonetic: "/driːm/", koreanSound: "드림" },
+    { word: "different", meaning: "다른", phonetic: "/ˈdɪfrənt/", koreanSound: "디퍼런트" },
+    { word: "bee", meaning: "벌", phonetic: "/biː/", koreanSound: "비" },
+    { word: "fall", meaning: "가을", phonetic: "/fɔːl/", koreanSound: "폴" },
+    { word: "skirt", meaning: "치마", phonetic: "/skɜːrt/", koreanSound: "스커트" },
+    { word: "theater", meaning: "극장", phonetic: "/ˈθiːətər/", koreanSound: "씨어터" },
+    { word: "worry", meaning: "걱정하다", phonetic: "/ˈwɜːri/", koreanSound: "워리" },
+    { word: "hobby", meaning: "취미", phonetic: "/ˈhɑːbi/", koreanSound: "하비" },
+    { word: "juice", meaning: "주스", phonetic: "/dʒuːs/", koreanSound: "주스" },
+    { word: "hear", meaning: "듣다", phonetic: "/hɪr/", koreanSound: "히어" },
+    { word: "new", meaning: "새로운", phonetic: "/nuː/", koreanSound: "뉴" },
+    { word: "butterfly", meaning: "나비", phonetic: "/ˈbʌtərflaɪ/", koreanSound: "버터플라이" },
+    { word: "winter", meaning: "겨울", phonetic: "/ˈwɪntər/", koreanSound: "윈터" },
+    { word: "shoes", meaning: "신발", phonetic: "/ʃuːz/", koreanSound: "슈즈" },
+    { word: "concert hall", meaning: "콘서트홀", phonetic: "/ˈkɑːnsərt hɔːl/", koreanSound: "콘서트 홀" },
+    { word: "hope", meaning: "희망하다", phonetic: "/hoʊp/", koreanSound: "호프" },
+    { word: "game", meaning: "게임", phonetic: "/ɡeɪm/", koreanSound: "게임" },
+    { word: "coffee", meaning: "커피", phonetic: "/ˈkɔːfi/", koreanSound: "커피" },
+    { word: "smell", meaning: "냄새 맡다", phonetic: "/smel/", koreanSound: "스멜" },
+    { word: "old", meaning: "오래된", phonetic: "/oʊld/", koreanSound: "올드" },
+    { word: "spider", meaning: "거미", phonetic: "/ˈspaɪdər/", koreanSound: "스파이더" },
+    { word: "weather", meaning: "날씨", phonetic: "/ˈweðər/", koreanSound: "웨더" },
+    { word: "socks", meaning: "양말", phonetic: "/sɑːks/", koreanSound: "삭스" },
+    { word: "stadium", meaning: "경기장", phonetic: "/ˈsteɪdiəm/", koreanSound: "스타디움" },
+    { word: "wish", meaning: "바라다", phonetic: "/wɪʃ/", koreanSound: "위시" },
+    { word: "sport", meaning: "스포츠", phonetic: "/spɔːrt/", koreanSound: "스포츠" },
+    { word: "tea", meaning: "차", phonetic: "/tiː/", koreanSound: "티" },
+    { word: "touch", meaning: "만지다", phonetic: "/tʌtʃ/", koreanSound: "터치" },
+    { word: "young", meaning: "어린", phonetic: "/jʌŋ/", koreanSound: "영" },
+    { word: "dinosaur", meaning: "공룡", phonetic: "/ˈdaɪnəsɔːr/", koreanSound: "다이노소어" },
+    { word: "sunny", meaning: "맑은", phonetic: "/ˈsʌni/", koreanSound: "써니" },
+    { word: "hat", meaning: "모자", phonetic: "/hæt/", koreanSound: "햇" },
+    { word: "farm", meaning: "농장", phonetic: "/fɑːrm/", koreanSound: "팜" },
+    { word: "remember", meaning: "기억하다", phonetic: "/rɪˈmembər/", koreanSound: "리멤버" },
+    { word: "music", meaning: "음악", phonetic: "/ˈmjuːzɪk/", koreanSound: "뮤직" },
+    { word: "candy", meaning: "사탕", phonetic: "/ˈkændi/", koreanSound: "캔디" },
+    { word: "taste", meaning: "맛보다", phonetic: "/teɪst/", koreanSound: "테이스트" },
+    { word: "warm", meaning: "따뜻한", phonetic: "/wɔːrm/", koreanSound: "웜" },
+    { word: "pet", meaning: "애완동물", phonetic: "/pet/", koreanSound: "펫" },
+    { word: "cloudy", meaning: "흐린", phonetic: "/ˈklaʊdi/", koreanSound: "클라우디" },
+    { word: "cap", meaning: "모자", phonetic: "/kæp/", koreanSound: "캡" },
+    { word: "factory", meaning: "공장", phonetic: "/ˈfæktəri/", koreanSound: "팩토리" },
+    { word: "forget", meaning: "잊다", phonetic: "/fərˈɡet/", koreanSound: "포겟" },
+    { word: "movie", meaning: "영화", phonetic: "/ˈmuːvi/", koreanSound: "무비" },
+    { word: "chocolate", meaning: "초콜릿", phonetic: "/ˈtʃɔːklət/", koreanSound: "초콜릿" },
+    { word: "fall", meaning: "넘어지다", phonetic: "/fɔːl/", koreanSound: "폴" },
+    { word: "cool", meaning: "시원한", phonetic: "/kuːl/", koreanSound: "쿨" },
+    { word: "plant", meaning: "식물", phonetic: "/plænt/", koreanSound: "플랜트" },
+    { word: "rainy", meaning: "비 오는", phonetic: "/ˈreɪni/", koreanSound: "레이니" },
+    { word: "gloves", meaning: "장갑", phonetic: "/ɡlʌvz/", koreanSound: "글러브즈" },
+    { word: "office", meaning: "사무실", phonetic: "/ˈɔːfɪs/", koreanSound: "오피스" },
+    { word: "promise", meaning: "약속하다", phonetic: "/ˈprɑːmɪs/", koreanSound: "프라미스" },
+    { word: "song", meaning: "노래", phonetic: "/sɔːŋ/", koreanSound: "송" },
+    { word: "cookie", meaning: "쿠키", phonetic: "/ˈkʊki/", koreanSound: "쿠키" },
+    { word: "grow", meaning: "자라다", phonetic: "/ɡroʊ/", koreanSound: "그로우" },
+    { word: "dry", meaning: "마른", phonetic: "/draɪ/", koreanSound: "드라이" },
+    { word: "leaf", meaning: "나뭇잎", phonetic: "/liːf/", koreanSound: "리프" },
+    { word: "snowy", meaning: "눈 오는", phonetic: "/ˈsnoʊi/", koreanSound: "스노위" },
+    { word: "scarf", meaning: "스카프", phonetic: "/skɑːrf/", koreanSound: "스카프" },
+    { word: "company", meaning: "회사", phonetic: "/ˈkʌmpəni/", koreanSound: "컴퍼니" },
+    { word: "excite", meaning: "신나게 하다", phonetic: "/ɪkˈsaɪt/", koreanSound: "익사이트" },
+    { word: "dance", meaning: "춤", phonetic: "/dæns/", koreanSound: "댄스" },
+    { word: "cake", meaning: "케이크", phonetic: "/keɪk/", koreanSound: "케이크" },
+    { word: "die", meaning: "죽다", phonetic: "/daɪ/", koreanSound: "다이" },
+    { word: "wet", meaning: "젖은", phonetic: "/wet/", koreanSound: "웻" },
+    { word: "seed", meaning: "씨앗", phonetic: "/siːd/", koreanSound: "시드" },
+    { word: "windy", meaning: "바람 부는", phonetic: "/ˈwɪndi/", koreanSound: "윈디" },
+    { word: "coat", meaning: "코트", phonetic: "/koʊt/", koreanSound: "코트" },
+    { word: "ground", meaning: "땅", phonetic: "/ɡraʊnd/", koreanSound: "그라운드" },
+    { word: "agree", meaning: "동의하다", phonetic: "/əˈɡriː/", koreanSound: "어그리" },
+    { word: "art", meaning: "미술", phonetic: "/ɑːrt/", koreanSound: "아트" },
+    { word: "ice cream", meaning: "아이스크림", phonetic: "/aɪs kriːm/", koreanSound: "아이스크림" },
+    { word: "marry", meaning: "결혼하다", phonetic: "/ˈmæri/", koreanSound: "매리" },
+    { word: "heavy", meaning: "무거운", phonetic: "/ˈhevi/", koreanSound: "헤비" },
+    { word: "grass", meaning: "풀", phonetic: "/ɡræs/", koreanSound: "그래스" },
+    { word: "hot", meaning: "더운", phonetic: "/hɑːt/", koreanSound: "핫" },
+    { word: "jacket", meaning: "재킷", phonetic: "/ˈdʒækɪt/", koreanSound: "재킷" },
+    { word: "sky", meaning: "하늘", phonetic: "/skaɪ/", koreanSound: "스카이" },
+    { word: "plan", meaning: "계획하다", phonetic: "/plæn/", koreanSound: "플랜" },
+    { word: "trip", meaning: "여행", phonetic: "/trɪp/", koreanSound: "트립" },
+    { word: "pizza", meaning: "피자", phonetic: "/ˈpiːtsə/", koreanSound: "피자" },
+    { word: "visit", meaning: "방문하다", phonetic: "/ˈvɪzɪt/", koreanSound: "비지트" },
+    { word: "light", meaning: "가벼운", phonetic: "/laɪt/", koreanSound: "라이트" },
+    { word: "forest", meaning: "숲", phonetic: "/ˈfɔːrɪst/", koreanSound: "포레스트" },
+    { word: "cold", meaning: "추운", phonetic: "/koʊld/", koreanSound: "콜드" },
+    { word: "sweater", meaning: "스웨터", phonetic: "/ˈswetər/", koreanSound: "스웨터" },
+    { word: "air", meaning: "공기", phonetic: "/er/", koreanSound: "에어" },
+    { word: "choose", meaning: "고르다", phonetic: "/tʃuːz/", koreanSound: "추즈" },
+    { word: "vacation", meaning: "방학", phonetic: "/veɪˈkeɪʃn/", koreanSound: "베케이션" },
+    { word: "hamburger", meaning: "햄버거", phonetic: "/ˈhæmbɜːrɡər/", koreanSound: "햄버거" },
+    { word: "join", meaning: "참여하다", phonetic: "/dʒɔɪn/", koreanSound: "조인" },
+    { word: "dark", meaning: "어두운", phonetic: "/dɑːrk/", koreanSound: "다크" },
+    { word: "desert", meaning: "사막", phonetic: "/ˈdezərt/", koreanSound: "데저트" },
+    { word: "warm", meaning: "따뜻한", phonetic: "/wɔːrm/", koreanSound: "웜" },
+    { word: "pajamas", meaning: "잠옷", phonetic: "/pəˈdʒɑːməz/", koreanSound: "파자마스" },
+    { word: "space", meaning: "우주", phonetic: "/speɪs/", koreanSound: "스페이스" },
+    { word: "decide", meaning: "결정하다", phonetic: "/dɪˈsaɪd/", koreanSound: "디사이드" },
+    { word: "picnic", meaning: "소풍", phonetic: "/ˈpɪknɪk/", koreanSound: "피크닉" },
+    { word: "sandwich", meaning: "샌드위치", phonetic: "/ˈsænwɪtʃ/", koreanSound: "샌드위치" },
+    { word: "invite", meaning: "초대하다", phonetic: "/ɪnˈvaɪt/", koreanSound: "인바이트" },
+    { word: "bright", meaning: "밝은", phonetic: "/braɪt/", koreanSound: "브라이트" },
+    { word: "cave", meaning: "동굴", phonetic: "/keɪv/", koreanSound: "케이브" },
+    { word: "cool", meaning: "시원한", phonetic: "/kuːl/", koreanSound: "쿨" },
+    { word: "uniform", meaning: "교복", phonetic: "/ˈjuːnɪfɔːrm/", koreanSound: "유니폼" },
+    { word: "earth", meaning: "지구", phonetic: "/ɜːrθ/", koreanSound: "얼쓰" },
+    { word: "explain", meaning: "설명하다", phonetic: "/ɪkˈspleɪn/", koreanSound: "익스플레인" },
+    { word: "party", meaning: "파티", phonetic: "/ˈpɑːrti/", koreanSound: "파티" },
+    { word: "salad", meaning: "샐러드", phonetic: "/ˈsæləd/", koreanSound: "샐러드" },
+    { word: "order", meaning: "주문하다", phonetic: "/ˈɔːrdər/", koreanSound: "오더" },
+    { word: "loud", meaning: "시끄러운", phonetic: "/laʊd/", koreanSound: "라우드" },
+    { word: "hill", meaning: "언덕", phonetic: "/hɪl/", koreanSound: "힐" },
+    { word: "fine", meaning: "좋은", phonetic: "/faɪn/", koreanSound: "파인" },
+    { word: "ring", meaning: "반지", phonetic: "/rɪŋ/", koreanSound: "링" },
+    { word: "planet", meaning: "행성", phonetic: "/ˈplænɪt/", koreanSound: "플래닛" },
+    { word: "guess", meaning: "추측하다", phonetic: "/ɡes/", koreanSound: "게스" },
+    { word: "birthday", meaning: "생일", phonetic: "/ˈbɜːrθdeɪ/", koreanSound: "벌스데이" },
+    { word: "soup", meaning: "수프", phonetic: "/suːp/", koreanSound: "수프" },
+    { word: "pay", meaning: "지불하다", phonetic: "/peɪ/", koreanSound: "페이" },
+    { word: "quiet", meaning: "조용한", phonetic: "/ˈkwaɪət/", koreanSound: "콰이어트" },
+    { word: "field", meaning: "들판", phonetic: "/fiːld/", koreanSound: "필드" },
+    { word: "hot", meaning: "매운", phonetic: "/hɑːt/", koreanSound: "핫" },
+    { word: "necklace", meaning: "목걸이", phonetic: "/ˈnekləs/", koreanSound: "네클리스" },
+    { word: "star", meaning: "별", phonetic: "/stɑːr/", koreanSound: "스타" },
+    { word: "introduce", meaning: "소개하다", phonetic: "/ˌɪntrəˈduːs/", koreanSound: "인트로듀스" },
+    { word: "gift", meaning: "선물", phonetic: "/ɡɪft/", koreanSound: "기프트" },
+    { word: "steak", meaning: "스테이크", phonetic: "/steɪk/", koreanSound: "스테이크" },
+    { word: "save", meaning: "구하다", phonetic: "/seɪv/", koreanSound: "세이브" },
+    { word: "clean", meaning: "깨끗한", phonetic: "/kliːn/", koreanSound: "클린" },
+    { word: "pond", meaning: "연못", phonetic: "/pɑːnd/", koreanSound: "폰드" },
+    { word: "windy", meaning: "바람부는", phonetic: "/ˈwɪndi/", koreanSound: "윈디" },
+    { word: "watch", meaning: "손목시계", phonetic: "/wɑːtʃ/", koreanSound: "워치" },
+    { word: "sun", meaning: "태양", phonetic: "/sʌn/", koreanSound: "선" },
+    { word: "lie", meaning: "거짓말하다", phonetic: "/laɪ/", koreanSound: "라이" },
+    { word: "present", meaning: "선물", phonetic: "/ˈpreznt/", koreanSound: "프레젠트" },
+    { word: "pasta", meaning: "파스타", phonetic: "/ˈpɑːstə/", koreanSound: "파스타" },
+    { word: "worry", meaning: "걱정하다", phonetic: "/ˈwɜːri/", koreanSound: "워리" },
+    { word: "dirty", meaning: "더러운", phonetic: "/ˈdɜːrti/", koreanSound: "더티" },
+    { word: "lake", meaning: "호수", phonetic: "/leɪk/", koreanSound: "레이크" },
+    { word: "rainbow", meaning: "무지개", phonetic: "/ˈreɪnboʊ/", koreanSound: "레인보우" },
+    { word: "glasses", meaning: "안경", phonetic: "/ˈɡlæsɪz/", koreanSound: "글래시즈" },
+    { word: "moon", meaning: "달", phonetic: "/muːn/", koreanSound: "문" },
+    { word: "mean", meaning: "의미하다", phonetic: "/miːn/", koreanSound: "민" },
+    { word: "card", meaning: "카드", phonetic: "/kɑːrd/", koreanSound: "카드" },
+    { word: "noodle", meaning: "국수", phonetic: "/ˈnuːdl/", koreanSound: "누들" },
+    { word: "shout", meaning: "소리치다", phonetic: "/ʃaʊt/", koreanSound: "샤우트" },
+    { word: "strong", meaning: "강한", phonetic: "/strɔːŋ/", koreanSound: "스트롱" },
+    { word: "ocean", meaning: "대양", phonetic: "/ˈoʊʃn/", koreanSound: "오션" },
+    { word: "storm", meaning: "폭풍", phonetic: "/stɔːrm/", koreanSound: "스톰" },
+    { word: "bag", meaning: "가방", phonetic: "/bæɡ/", koreanSound: "백" },
+    { word: "future", meaning: "미래", phonetic: "/ˈfjuːtʃər/", koreanSound: "퓨처" },
+    { word: "pass", meaning: "지나가다", phonetic: "/pæs/", koreanSound: "패스" },
+    { word: "toy", meaning: "장난감", phonetic: "/tɔɪ/", koreanSound: "토이" },
+    { word: "egg", meaning: "달걀", phonetic: "/eɡ/", koreanSound: "에그" },
+    { word: "rest", meaning: "쉬다", phonetic: "/rest/", koreanSound: "레스트" },
+    { word: "weak", meaning: "약한", phonetic: "/wiːk/", koreanSound: "위크" },
+    { word: "rock", meaning: "바위", phonetic: "/rɑːk/", koreanSound: "락" },
+    { word: "ice", meaning: "얼음", phonetic: "/aɪs/", koreanSound: "아이스" },
+    { word: "wallet", meaning: "지갑", phonetic: "/ˈwɔːlɪt/", koreanSound: "월릿" },
+    { word: "past", meaning: "과거", phonetic: "/pæst/", koreanSound: "패스트" },
+    { word: "prepare", meaning: "준비하다", phonetic: "/prɪˈper/", koreanSound: "프리페어" },
+    { word: "doll", meaning: "인형", phonetic: "/dɑːl/", koreanSound: "돌" },
+    { word: "meat", meaning: "고기", phonetic: "/miːt/", koreanSound: "미트" },
+    { word: "return", meaning: "돌아오다", phonetic: "/rɪˈtɜːrn/", koreanSound: "리턴" },
+    { word: "fat", meaning: "뚱뚱한", phonetic: "/fæt/", koreanSound: "팻" },
+    { word: "sand", meaning: "모래", phonetic: "/sænd/", koreanSound: "샌드" },
+    { word: "fire", meaning: "불", phonetic: "/faɪər/", koreanSound: "파이어" },
+    { word: "umbrella", meaning: "우산", phonetic: "/ʌmˈbrelə/", koreanSound: "엄브렐러" },
+    { word: "present", meaning: "현재", phonetic: "/ˈpreznt/", koreanSound: "프레젠트" },
+    { word: "protect", meaning: "보호하다", phonetic: "/prəˈtekt/", koreanSound: "프로텍트" },
+    { word: "robot", meaning: "로봇", phonetic: "/ˈroʊbɑːt/", koreanSound: "로봇" },
+    { word: "pork", meaning: "돼지고기", phonetic: "/pɔːrk/", koreanSound: "포크" },
+    { word: "share", meaning: "공유하다", phonetic: "/ʃer/", koreanSound: "쉐어" },
+    { word: "thin", meaning: "마른", phonetic: "/θɪn/", koreanSound: "씬" },
+    { word: "mud", meaning: "진흙", phonetic: "/mʌd/", koreanSound: "머드" },
+    { word: "light", meaning: "빛", phonetic: "/laɪt/", koreanSound: "라이트" },
+    { word: "key", meaning: "열쇠", phonetic: "/kiː/", koreanSound: "키" },
+    { word: "life", meaning: "삶", phonetic: "/laɪf/", koreanSound: "라이프" },
+    { word: "record", meaning: "기록하다", phonetic: "/rɪˈkɔːrd/", koreanSound: "리코드" },
+    { word: "ball", meaning: "공", phonetic: "/bɔːl/", koreanSound: "볼" },
+    { word: "beef", meaning: "소고기", phonetic: "/biːf/", koreanSound: "비프" },
+    { word: "stay", meaning: "머무르다", phonetic: "/steɪ/", koreanSound: "스테이" },
+    { word: "sick", meaning: "아픈", phonetic: "/sɪk/", koreanSound: "씩" },
+    { word: "stone", meaning: "돌", phonetic: "/stoʊn/", koreanSound: "스톤" },
+    { word: "dark", meaning: "어둠", phonetic: "/dɑːrk/", koreanSound: "다크" },
+    { word: "camera", meaning: "카메라", phonetic: "/ˈkæmərə/", koreanSound: "카메라" },
+    { word: "health", meaning: "건강", phonetic: "/helθ/", koreanSound: "헬쓰" },
+    { word: "solve", meaning: "해결하다", phonetic: "/sɑːlv/", koreanSound: "솔브" },
+    { word: "puzzle", meaning: "퍼즐", phonetic: "/ˈpʌzl/", koreanSound: "퍼즐" },
+    { word: "chicken", meaning: "닭고기", phonetic: "/ˈtʃɪkɪn/", koreanSound: "치킨" },
+    { word: "thank", meaning: "감사하다", phonetic: "/θæŋk/", koreanSound: "땡큐" },
+    { word: "healthy", meaning: "건강한", phonetic: "/ˈhelθi/", koreanSound: "헬씨" },
+    { word: "stick", meaning: "막대기", phonetic: "/stɪk/", koreanSound: "스틱" },
+    { word: "sound", meaning: "소리", phonetic: "/saʊnd/", koreanSound: "사운드" },
+    { word: "phone", meaning: "전화기", phonetic: "/foʊn/", koreanSound: "폰" },
+    { word: "exercise", meaning: "운동", phonetic: "/ˈeksərsaɪz/", koreanSound: "엑서사이즈" },
+    { word: "suggest", meaning: "제안하다", phonetic: "/səɡˈdʒest/", koreanSound: "서제스트" },
+    { word: "block", meaning: "블록", phonetic: "/blɑːk/", koreanSound: "블록" },
+    { word: "fish", meaning: "생선", phonetic: "/fɪʃ/", koreanSound: "피쉬" },
+    { word: "understand", meaning: "이해하다", phonetic: "/ˌʌndərˈstænd/", koreanSound: "언더스탠드" },
+    { word: "fresh", meaning: "신선한", phonetic: "/freʃ/", koreanSound: "프레쉬" },
+    { word: "wood", meaning: "나무", phonetic: "/wʊd/", koreanSound: "우드" },
+    { word: "noise", meaning: "소음", phonetic: "/nɔɪz/", koreanSound: "노이즈" },
+    { word: "photo", meaning: "사진", phonetic: "/ˈfoʊtoʊ/", koreanSound: "포토" },
+    { word: "habit", meaning: "습관", phonetic: "/ˈhæbɪt/", koreanSound: "해빗" },
+    { word: "wonder", meaning: "궁금하다", phonetic: "/ˈwʌndər/", koreanSound: "원더" },
+    { word: "kite", meaning: "연", phonetic: "/kaɪt/", koreanSound: "카이트" },
+    { word: "salt", meaning: "소금", phonetic: "/sɔːlt/", koreanSound: "솔트" },
+    { word: "worry", meaning: "걱정하다", phonetic: "/ˈwɜːri/", koreanSound: "워리" },
+    { word: "famous", meaning: "유명한", phonetic: "/ˈfeɪməs/", koreanSound: "페이머스" },
+    { word: "paper", meaning: "종이", phonetic: "/ˈpeɪpər/", koreanSound: "페이퍼" },
+    { word: "voice", meaning: "목소리", phonetic: "/vɔɪs/", koreanSound: "보이스" },
+    { word: "money", meaning: "돈", phonetic: "/ˈmʌni/", koreanSound: "머니" },
+    { word: "promise", meaning: "약속", phonetic: "/ˈprɑːmɪs/", koreanSound: "프라미스" },
+    { word: "invent", meaning: "발명하다", phonetic: "/ɪnˈvent/", koreanSound: "인벤트" },
+    { word: "board game", meaning: "보드게임", phonetic: "/bɔːrd ɡeɪm/", koreanSound: "보드게임" },
+    { word: "sugar", meaning: "설탕", phonetic: "/ˈʃʊɡər/", koreanSound: "슈거" },
+    { word: "shout", meaning: "외치다", phonetic: "/ʃaʊt/", koreanSound: "샤우트" },
+    { word: "popular", meaning: "인기 있는", phonetic: "/ˈpɑːpjələr/", koreanSound: "파퓰러" },
+    { word: "plastic", meaning: "플라스틱", phonetic: "/ˈplæstɪk/", koreanSound: "플라스틱" },
+    { word: "story", meaning: "이야기", phonetic: "/ˈstɔːri/", koreanSound: "스토리" },
+    { word: "coin", meaning: "동전", phonetic: "/kɔɪn/", koreanSound: "코인" },
+    { word: "secret", meaning: "비밀", phonetic: "/ˈsiːkrət/", koreanSound: "시크릿" },
+    { word: "answer", meaning: "대답하다", phonetic: "/ˈænsər/", koreanSound: "앤서" },
+    { word: "card", meaning: "카드", phonetic: "/kɑːrd/", koreanSound: "카드" },
+    { word: "oil", meaning: "기름", phonetic: "/ɔɪl/", koreanSound: "오일" },
+    { word: "believe", meaning: "믿다", phonetic: "/bɪˈliːv/", koreanSound: "빌리브" },
+    { word: "special", meaning: "특별한", phonetic: "/ˈspeʃl/", koreanSound: "스페셜" },
+    { word: "glass", meaning: "유리", phonetic: "/ɡlæs/", koreanSound: "글래스" },
+    { word: "letter", meaning: "편지", phonetic: "/ˈletər/", koreanSound: "레터" },
+    { word: "bill", meaning: "지폐", phonetic: "/bɪl/", koreanSound: "빌" },
+    { word: "problem", meaning: "문제", phonetic: "/ˈprɑːbləm/", koreanSound: "프라블럼" },
+    { word: "arrive", meaning: "도착하다", phonetic: "/əˈraɪv/", koreanSound: "어라이브" },
+    { word: "swing", meaning: "그네", phonetic: "/swɪŋ/", koreanSound: "스윙" },
+    { word: "sauce", meaning: "소스", phonetic: "/sɔːs/", koreanSound: "소스" },
+    { word: "become", meaning: "되다", phonetic: "/bɪˈkʌm/", koreanSound: "비컴" },
+    { word: "usual", meaning: "보통의", phonetic: "/ˈjuːʒuəl/", koreanSound: "유주얼" },
+    { word: "metal", meaning: "금속", phonetic: "/ˈmetl/", koreanSound: "메탈" },
+    { word: "newspaper", meaning: "신문", phonetic: "/ˈnuːzpeɪpər/", koreanSound: "뉴스페이퍼" },
+    { word: "price", meaning: "가격", phonetic: "/praɪs/", koreanSound: "프라이스" },
+    { word: "question", meaning: "질문", phonetic: "/ˈkwestʃən/", koreanSound: "퀘스천" },
+    { word: "change", meaning: "바꾸다", phonetic: "/tʃeɪndʒ/", koreanSound: "체인지" },
+    { word: "slide", meaning: "미끄럼틀", phonetic: "/slaɪd/", koreanSound: "슬라이드" },
+    { word: "snack", meaning: "과자", phonetic: "/snæk/", koreanSound: "스낵" },
+    { word: "borrow", meaning: "빌리다", phonetic: "/ˈbɔːroʊ/", koreanSound: "보로우" },
+    { word: "favorite", meaning: "가장 좋아하는", phonetic: "/ˈfeɪvərɪt/", koreanSound: "페이보릿" },
+    { word: "box", meaning: "상자", phonetic: "/bɑːks/", koreanSound: "박스" },
+    { word: "magazine", meaning: "잡지", phonetic: "/ˈmæɡəziːn/", koreanSound: "매거진" },
+    { word: "cheap", meaning: "싼", phonetic: "/tʃiːp/", koreanSound: "칩" },
+    { word: "reason", meaning: "이유", phonetic: "/ˈriːzən/", koreanSound: "리즌" },
+    { word: "collect", meaning: "모으다", phonetic: "/kəˈlekt/", koreanSound: "컬렉트" },
+    { word: "seesaw", meaning: "시소", phonetic: "/ˈsiːsɔː/", koreanSound: "시소" },
+    { word: "meal", meaning: "식사", phonetic: "/miːl/", koreanSound: "밀" },
+    { word: "continue", meaning: "계속하다", phonetic: "/kənˈtɪnjuː/", koreanSound: "컨티뉴" },
+    { word: "important", meaning: "중요한", phonetic: "/ɪmˈpɔːrtnt/", koreanSound: "임포턴트" },
+    { word: "bottle", meaning: "병", phonetic: "/ˈbɑːtl/", koreanSound: "보틀" },
+    { word: "comic book", meaning: "만화책", phonetic: "/ˈkɑːmɪk bʊk/", koreanSound: "코믹북" },
+    { word: "expensive", meaning: "비싼", phonetic: "/ɪkˈspensɪv/", koreanSound: "익스펜시브" },
+    { word: "result", meaning: "결과", phonetic: "/rɪˈzʌlt/", koreanSound: "리절트" },
+    { word: "count", meaning: "세다", phonetic: "/kaʊnt/", koreanSound: "카운트" },
+    { word: "hide-and-seek", meaning: "숨바꼭질", phonetic: "/haɪd ænd siːk/", koreanSound: "하이드 앤 시크" },
+    { word: "breakfast", meaning: "아침식사", phonetic: "/ˈbrekfəst/", koreanSound: "블렉퍼스트" },
+    { word: "cover", meaning: "덮다", phonetic: "/ˈkʌvər/", koreanSound: "커버" },
+    { word: "interesting", meaning: "재미있는", phonetic: "/ˈɪntrəstɪŋ/", koreanSound: "인터레스팅" },
+    { word: "cup", meaning: "컵", phonetic: "/kʌp/", koreanSound: "컵" },
+    { word: "diary", meaning: "일기", phonetic: "/ˈdaɪəri/", koreanSound: "다이어리" },
+    { word: "free", meaning: "무료의", phonetic: "/friː/", koreanSound: "프리" },
+    { word: "way", meaning: "방법", phonetic: "/weɪ/", koreanSound: "웨이" },
+    { word: "cross", meaning: "건너다", phonetic: "/krɔːs/", koreanSound: "크로스" },
+    { word: "tag", meaning: "술래잡기", phonetic: "/tæɡ/", koreanSound: "태그" },
+    { word: "lunch", meaning: "점심식사", phonetic: "/lʌntʃ/", koreanSound: "런치" },
+    { word: "enjoy", meaning: "즐기다", phonetic: "/ɪnˈdʒɔɪ/", koreanSound: "인조이" },
+    { word: "boring", meaning: "지루한", phonetic: "/ˈbɔːrɪŋ/", koreanSound: "보링" },
+    { word: "dish", meaning: "접시", phonetic: "/dɪʃ/", koreanSound: "디쉬" },
+    { word: "e-mail", meaning: "이메일", phonetic: "/ˈiːmeɪl/", koreanSound: "이메일" },
+    { word: "discount", meaning: "할인", phonetic: "/ˈdɪskaʊnt/", koreanSound: "디스카운트" },
+    { word: "side", meaning: "쪽", phonetic: "/saɪd/", koreanSound: "사이드" },
+    { word: "dance", meaning: "춤추다", phonetic: "/dæns/", koreanSound: "댄스" },
+    { word: "fun", meaning: "재미", phonetic: "/fʌn/", koreanSound: "펀" },
+    { word: "dinner", meaning: "저녁식사", phonetic: "/ˈdɪnər/", koreanSound: "디너" },
+    { word: "enter", meaning: "들어가다", phonetic: "/ˈentər/", koreanSound: "엔터" },
+    { word: "exciting", meaning: "신나는", phonetic: "/ɪkˈsaɪtɪŋ/", koreanSound: "익사이팅" },
+    { word: "fork", meaning: "포크", phonetic: "/fɔːrk/", koreanSound: "포크" },
+    { word: "Internet", meaning: "인터넷", phonetic: "/ˈɪntərnet/", koreanSound: "인터넷" },
+    { word: "size", meaning: "크기", phonetic: "/saɪz/", koreanSound: "사이즈" },
+    { word: "top", meaning: "꼭대기", phonetic: "/tɑːp/", koreanSound: "탑" },
+    { word: "exercise", meaning: "운동하다", phonetic: "/ˈeksərsaɪz/", koreanSound: "엑서사이즈" },
+    { word: "joke", meaning: "농담", phonetic: "/dʒoʊk/", koreanSound: "조크" },
+    { word: "dessert", meaning: "후식", phonetic: "/dɪˈzɜːrt/", koreanSound: "디저트" },
+    { word: "exit", meaning: "나가다", phonetic: "/ˈeɡzɪt/", koreanSound: "엑시트" },
+    { word: "funny", meaning: "웃기는", phonetic: "/ˈfʌni/", koreanSound: "퍼니" },
+    { word: "spoon", meaning: "숟가락", phonetic: "/spuːn/", koreanSound: "스푼" },
+    { word: "website", meaning: "웹사이트", phonetic: "/ˈwebsaɪt/", koreanSound: "웹사이트" },
+    { word: "line", meaning: "줄", phonetic: "/laɪn/", koreanSound: "라인" },
+    { word: "bottom", meaning: "바닥", phonetic: "/ˈbɑːtəm/", koreanSound: "보텀" },
+    { word: "fight", meaning: "싸우다", phonetic: "/faɪt/", koreanSound: "파이트" },
+    { word: "magic", meaning: "마술", phonetic: "/ˈmædʒɪk/", koreanSound: "매직" },
+    { word: "drink", meaning: "마실 것", phonetic: "/drɪŋk/", koreanSound: "드링크" },
+    { word: "fill", meaning: "채우다", phonetic: "/fɪl/", koreanSound: "필" },
+    { word: "hard", meaning: "어려운", phonetic: "/hɑːrd/", koreanSound: "하드" },
+    { word: "knife", meaning: "칼", phonetic: "/naɪf/", koreanSound: "나이프" },
+    { word: "password", meaning: "비밀번호", phonetic: "/ˈpæswɜːrd/", koreanSound: "패스워드" },
+    { word: "group", meaning: "그룹", phonetic: "/ɡruːp/", koreanSound: "그룹" },
+    { word: "center", meaning: "중간", phonetic: "/ˈsentər/", koreanSound: "센터" },
+    { word: "follow", meaning: "따라가다", phonetic: "/ˈfɑːloʊ/", koreanSound: "팔로우" },
+    { word: "trick", meaning: "속임수", phonetic: "/trɪk/", koreanSound: "트릭" },
+    { word: "hungry", meaning: "배고픈", phonetic: "/ˈhʌŋɡri/", koreanSound: "헝그리" },
+    { word: "fly", meaning: "날다", phonetic: "/flaɪ/", koreanSound: "플라이" },
+    { word: "right", meaning: "옳은", phonetic: "/raɪt/", koreanSound: "라이트" },
+    { word: "plate", meaning: "접시", phonetic: "/pleɪt/", koreanSound: "플레이트" },
+    { word: "click", meaning: "클릭하다", phonetic: "/klɪk/", koreanSound: "클릭" },
+    { word: "team", meaning: "팀", phonetic: "/tiːm/", koreanSound: "팀" },
+    { word: "corner", meaning: "모퉁이", phonetic: "/ˈkɔːrnər/", koreanSound: "코너" },
+    { word: "forgive", meaning: "용서하다", phonetic: "/fərˈɡɪv/", koreanSound: "포기브" },
+    { word: "race", meaning: "경주", phonetic: "/reɪs/", koreanSound: "레이스" },
+    { word: "thirsty", meaning: "목마른", phonetic: "/ˈθɜːrsti/", koreanSound: "썰스티" },
+    { word: "happen", meaning: "일어나다", phonetic: "/ˈhæpən/", koreanSound: "해픈" },
+    { word: "wrong", meaning: "틀린", phonetic: "/rɔːŋ/", koreanSound: "롱" },
+    { word: "bowl", meaning: "그릇", phonetic: "/boʊl/", koreanSound: "보울" },
+    { word: "download", meaning: "다운로드하다", phonetic: "/ˈdaʊnloʊd/", koreanSound: "다운로드" },
+    { word: "class", meaning: "수업", phonetic: "/klæs/", koreanSound: "클래스" },
+    { word: "front", meaning: "앞", phonetic: "/frʌnt/", koreanSound: "프런트" },
+    { word: "hate", meaning: "미워하다", phonetic: "/heɪt/", koreanSound: "헤이트" },
+    { word: "winner", meaning: "승자", phonetic: "/ˈwɪnər/", koreanSound: "위너" },
+    { word: "tired", meaning: "피곤한", phonetic: "/ˈtaɪərd/", koreanSound: "타이어드" },
+    { word: "hold", meaning: "잡다", phonetic: "/hoʊld/", koreanSound: "홀드" },
+    { word: "true", meaning: "사실인", phonetic: "/truː/", koreanSound: "트루" },
+    { word: " chopsticks", meaning: "젓가락", phonetic: "/ˈtʃɑːpstɪks/", koreanSound: "찹스틱스" },
+    { word: "search", meaning: "검색하다", phonetic: "/sɜːrtʃ/", koreanSound: "서치" },
+    { word: "club", meaning: "동아리", phonetic: "/klʌb/", koreanSound: "클럽" },
+    { word: "back", meaning: "뒤", phonetic: "/bæk/", koreanSound: "백" },
+    { word: "curious", meaning: "궁금한", phonetic: "/ˈkjʊriəs/", koreanSound: "큐리어스" },
+    { word: "prize", meaning: "상", phonetic: "/praɪz/", koreanSound: "프라이즈" },
+    { word: "safe", meaning: "안전한", phonetic: "/seɪf/", koreanSound: "세이프" },
+    { word: "delicious", meaning: "맛있는", phonetic: "/dɪˈlɪʃəs/", koreanSound: "딜리셔스" },
+    { word: "empty", meaning: "빈", phonetic: "/ˈempti/", koreanSound: "엠프티" },
+    { word: "future", meaning: "미래", phonetic: "/ˈfjuːtʃər/", koreanSound: "퓨처" },
+    { word: "giant", meaning: "거대한", phonetic: "/ˈdʒaɪənt/", koreanSound: "자이언트" },
+    { word: "habit", meaning: "습관", phonetic: "/ˈhæbɪt/", koreanSound: "해빗" },
+    { word: "idea", meaning: "생각", phonetic: "/aɪˈdiːə/", koreanSound: "아이디어" },
+    { word: "joke", meaning: "농담", phonetic: "/dʒoʊk/", koreanSound: "조크" },
+    { word: "knock", meaning: "두드리다", phonetic: "/nɑːk/", koreanSound: "낙" },
+    { word: "lake", meaning: "호수", phonetic: "/leɪk/", koreanSound: "레이크" },
+    { word: "magic", meaning: "마술", phonetic: "/ˈmædʒɪk/", koreanSound: "매직" },
+    { word: "neighbor", meaning: "이웃", phonetic: "/ˈneɪbər/", koreanSound: "네이버" },
+    { word: "ocean", meaning: "대양", phonetic: "/ˈoʊʃn/", koreanSound: "오션" },
+    { word: "palace", meaning: "궁전", phonetic: "/ˈpæləs/", koreanSound: "팰리스" },
+    { word: "quiet", meaning: "조용한", phonetic: "/ˈkwaɪət/", koreanSound: "콰이어트" },
+    { word: "race", meaning: "경주", phonetic: "/reɪs/", koreanSound: "레이스" },
+    { word: "secret", meaning: "비밀", phonetic: "/ˈsiːkrət/", koreanSound: "시크릿" },
+    { word: "taste", meaning: "맛", phonetic: "/teɪst/", koreanSound: "테이스트" },
+    { word: "uniform", meaning: "제복, 교복", phonetic: "/ˈjuːnɪfɔːrm/", koreanSound: "유니폼" },
+    { word: "valley", meaning: "계곡", phonetic: "/ˈvæli/", koreanSound: "밸리" },
+    { word: "whisper", meaning: "속삭이다", phonetic: "/ˈwɪspər/", koreanSound: "위스퍼" },
+    { word: "yogurt", meaning: "요구르트", phonetic: "/ˈjoʊɡərt/", koreanSound: "요거트" },
+    { word: "zone", meaning: "지역", phonetic: "/zoʊn/", koreanSound: "존" },
+    { word: "adventure", meaning: "모험", phonetic: "/ədˈventʃər/", koreanSound: "어드벤처" },
+    { word: "brave", meaning: "용감한", phonetic: "/breɪv/", koreanSound: "브레이브" },
+    { word: "celebrate", meaning: "축하하다", phonetic: "/ˈseləbreɪt/", koreanSound: "셀러브레이트" },
+    { word: "discover", meaning: "발견하다", phonetic: "/dɪˈskʌvər/", koreanSound: "디스커버" },
+    { word: "enjoy", meaning: "즐기다", phonetic: "/ɪnˈdʒɔɪ/", koreanSound: "인조이" },
+    { word: "famous", meaning: "유명한", phonetic: "/ˈfeɪməs/", koreanSound: "페이머스" },
+    { word: "goal", meaning: "목표", phonetic: "/ɡoʊl/", koreanSound: "골" },
+    { word: "honest", meaning: "정직한", phonetic: "/ˈɑːnɪst/", koreanSound: "아니스트" },
+    { word: "invent", meaning: "발명하다", phonetic: "/ɪnˈvent/", koreanSound: "인벤트" },
+    { word: "journey", meaning: "여행", phonetic: "/ˈdʒɜːrni/", koreanSound: "저니" },
+    { word: "kindness", meaning: "친절", phonetic: "/ˈkaɪndnəs/", koreanSound: "카인드니스" },
+    { word: "leader", meaning: "지도자", phonetic: "/ˈliːdər/", koreanSound: "리더" },
+    { word: "message", meaning: "메시지", phonetic: "/ˈmesɪdʒ/", koreanSound: "메시지" },
+    { word: "nature", meaning: "자연", phonetic: "/ˈneɪtʃər/", koreanSound: "네이처" },
+    { word: "opinion", meaning: "의견", phonetic: "/əˈpɪnjən/", koreanSound: "오피니언" },
+    { word: "popular", meaning: "인기 있는", phonetic: "/ˈpɑːpjələr/", koreanSound: "파퓰러" },
+    { word: "question", meaning: "질문", phonetic: "/ˈkwestʃən/", koreanSound: "퀘스천" },
+    { word: "remember", meaning: "기억하다", phonetic: "/rɪˈmembər/", koreanSound: "리멤버" },
+    { word: "share", meaning: "공유하다", phonetic: "/ʃer/", koreanSound: "쉐어" },
+    { word: "together", meaning: "함께", phonetic: "/təˈɡeðər/", koreanSound: "투게더" },
+    { word: "understand", meaning: "이해하다", phonetic: "/ˌʌndərˈstænd/", koreanSound: "언더스탠드" },
+    { word: "voice", meaning: "목소리", phonetic: "/vɔɪs/", koreanSound: "보이스" },
+    { word: "worry", meaning: "걱정하다", phonetic: "/ˈwɜːri/", koreanSound: "워리" },
+    { word: "shampoo", meaning: "샴푸", phonetic: "/ʃæmˈpuː/", koreanSound: "샴푸" },
+    { word: "address", meaning: "주소", phonetic: "/ˈædres/", koreanSound: "애드레스" },
+    { word: "blanket", meaning: "담요", phonetic: "/ˈblæŋkɪt/", koreanSound: "블랭킷" },
+    { word: "cereal", meaning: "시리얼", phonetic: "/ˈsɪriəl/", koreanSound: "시리얼" },
+    { word: "diamond", meaning: "다이아몬드", phonetic: "/ˈdaɪəmənd/", koreanSound: "다이아몬드" },
+    { word: "elbow", meaning: "팔꿈치", phonetic: "/ˈelboʊ/", koreanSound: "엘보우" },
+    { word: "forest", meaning: "숲", phonetic: "/ˈfɔːrɪst/", koreanSound: "포레스트" },
+    { word: "garage", meaning: "차고", phonetic: "/ɡəˈrɑːʒ/", koreanSound: "거라지" },
+    { word: "helmet", meaning: "헬멧", phonetic: "/ˈhelmɪt/", koreanSound: "헬멧" },
+    { word: "island", meaning: "섬", phonetic: "/ˈaɪlənd/", koreanSound: "아일랜드" },
+    { word: "jacket", meaning: "재킷", phonetic: "/ˈdʒækɪt/", koreanSound: "재킷" },
+    { word: "kitchen", meaning: "부엌", phonetic: "/ˈkɪtʃɪn/", koreanSound: "키친" },
+    { word: "library", meaning: "도서관", phonetic: "/ˈlaɪbreri/", koreanSound: "라이브러리" },
+    { word: "mirror", meaning: "거울", phonetic: "/ˈmɪrər/", koreanSound: "미러" },
+    { word: "noodle", meaning: "국수", phonetic: "/ˈnuːdl/", koreanSound: "누들" },
+    { word: "omelet", meaning: "오믈렛", phonetic: "/ˈɑːmlət/", koreanSound: "오믈렛" },
+    { word: "planet", meaning: "행성", phonetic: "/ˈplænɪt/", koreanSound: "플래닛" },
+    { word: "queen", meaning: "여왕", phonetic: "/kwiːn/", koreanSound: "퀸" },
+    { word: "robot", meaning: "로봇", phonetic: "/ˈroʊbɑːt/", koreanSound: "로봇" },
+    { word: "salad", meaning: "샐러드", phonetic: "/ˈsæləd/", koreanSound: "샐러드" },
+    { word: "tissue", meaning: "휴지", phonetic: "/ˈtɪʃuː/", koreanSound: "티슈" },
+    { word: "umbrella", meaning: "우산", phonetic: "/ʌmˈbrelə/", koreanSound: "엄브렐러" },
+    { word: "vegetable", meaning: "채소", phonetic: "/ˈvedʒtəbl/", koreanSound: "베지터블" },
+    { word: "wallet", meaning: "지갑", phonetic: "/ˈwɔːlɪt/", koreanSound: "월릿" },
+    { word: "yawn", meaning: "하품하다", phonetic: "/jɔːn/", koreanSound: "욘" },
+    { word: "zipper", meaning: "지퍼", phonetic: "/ˈzɪpər/", koreanSound: "지퍼" },
+    { word: "allow", meaning: "허락하다", phonetic: "/əˈlaʊ/", koreanSound: "얼라우" },
+    { word: "build", meaning: "짓다", phonetic: "/bɪld/", koreanSound: "빌드" },
+    { word: "choose", meaning: "선택하다", phonetic: "/tʃuːz/", koreanSound: "추즈" },
+    { word: "decide", meaning: "결정하다", phonetic: "/dɪˈsaɪd/", koreanSound: "디사이드" },
+    { word: "explain", meaning: "설명하다", phonetic: "/ɪkˈspleɪn/", koreanSound: "익스플레인" },
+    { word: "follow", meaning: "따라가다", phonetic: "/ˈfɑːloʊ/", koreanSound: "팔로우" },
+    { word: "guess", meaning: "추측하다", phonetic: "/ɡes/", koreanSound: "게스" },
+    { word: "hope", meaning: "희망하다", phonetic: "/hoʊp/", koreanSound: "호프" },
+    { word: "imagine", meaning: "상상하다", phonetic: "/ɪˈmædʒɪn/", koreanSound: "이매진" },
+    { word: "join", meaning: "가입하다", phonetic: "/dʒɔɪn/", koreanSound: "조인" },
+    { word: "keep", meaning: "유지하다", phonetic: "/kiːp/", koreanSound: "킵" },
+    { word: "laugh", meaning: "웃다", phonetic: "/læf/", koreanSound: "래프" },
+    { word: "miss", meaning: "놓치다, 그리워하다", phonetic: "/mɪs/", koreanSound: "미스" },
+    { word: "notice", meaning: "알아차리다", phonetic: "/ˈnoʊtɪs/", koreanSound: "노티스" },
+    { word: "order", meaning: "주문하다", phonetic: "/ˈɔːrdər/", koreanSound: "오더" },
+    { word: "pass", meaning: "지나가다", phonetic: "/pæs/", koreanSound: "패스" },
+    { word: "receive", meaning: "받다", phonetic: "/rɪˈsiːv/", koreanSound: "리시브" },
+    { word: "shout", meaning: "소리치다", phonetic: "/ʃaʊt/", koreanSound: "샤우트" },
+    { word: "travel", meaning: "여행하다", phonetic: "/ˈtrævl/", koreanSound: "트래블" },
+    { word: "use", meaning: "사용하다", phonetic: "/juːz/", koreanSound: "유즈" },
+    { word: "visit", meaning: "방문하다", phonetic: "/ˈvɪzɪt/", koreanSound: "비지트" },
+    { word: "wait", meaning: "기다리다", phonetic: "/weɪt/", koreanSound: "웨이트" },
+    { word: "act", meaning: "행동하다", phonetic: "/ækt/", koreanSound: "액트" },
+    { word: "begin", meaning: "시작하다", phonetic: "/bɪˈɡɪn/", koreanSound: "비긴" },
+    { word: "close", meaning: "닫다", phonetic: "/kloʊz/", koreanSound: "클로즈" },
+    { word: "arrive", meaning: "도착하다", phonetic: "/əˈraɪv/", koreanSound: "어라이브" },
+    { word: "bakery", meaning: "빵집", phonetic: "/ˈbeɪkəri/", koreanSound: "베이커리" },
+    { word: "cloudy", meaning: "구름 낀", phonetic: "/ˈklaʊdi/", koreanSound: "클라우디" },
+    { word: "dark", meaning: "어두운", phonetic: "/dɑːrk/", koreanSound: "다크" },
+    { word: "early", meaning: "일찍", phonetic: "/ˈɜːrli/", koreanSound: "얼리" },
+    { word: "friendly", meaning: "친절한", phonetic: "/ˈfrendli/", koreanSound: "프렌들리" },
+    { word: "gentle", meaning: "온화한", phonetic: "/ˈdʒentl/", koreanSound: "젠틀" },
+    { word: "heavy", meaning: "무거운", phonetic: "/ˈhevi/", koreanSound: "헤비" },
+    { word: "inside", meaning: "안에", phonetic: "/ɪnˈsaɪd/", koreanSound: "인사이드" },
+    { word: "junior", meaning: "손아래의", phonetic: "/ˈdʒuːniər/", koreanSound: "주니어" },
+    { word: "lazy", meaning: "게으른", phonetic: "/ˈleɪzi/", koreanSound: "레이지" },
+    { word: "mean", meaning: "못된", phonetic: "/miːn/", koreanSound: "민" },
+    { word: "nervous", meaning: "불안한", phonetic: "/ˈnɜːrvəs/", koreanSound: "널버스" },
+    { word: "outside", meaning: "밖에", phonetic: "/ˌaʊtˈsaɪd/", koreanSound: "아웃사이드" },
+    { word: "perfect", meaning: "완벽한", phonetic: "/ˈpɜːrfɪkt/", koreanSound: "퍼펙트" },
+    { word: "quick", meaning: "빠른", phonetic: "/kwɪk/", koreanSound: "퀵" },
+    { word: "ready", meaning: "준비된", phonetic: "/ˈredi/", koreanSound: "레디" },
+    { word: "silly", meaning: "어리석은", phonetic: "/ˈsɪli/", koreanSound: "실리" },
+    { word: "thirsty", meaning: "목마른", phonetic: "/ˈθɜːrsti/", koreanSound: "썰스티" },
+    { word: "upset", meaning: "화난", phonetic: "/ʌpˈset/", koreanSound: "업셋" },
+    { word: "village", meaning: "마을", phonetic: "/ˈvɪlɪdʒ/", koreanSound: "빌리지" },
+    { word: "warm", meaning: "따뜻한", phonetic: "/wɔːrm/", koreanSound: "웜" },
+    { word: "front", meaning: "앞", phonetic: "/frʌnt/", koreanSound: "프런트" },
+    { word: "back", meaning: "뒤", phonetic: "/bæk/", koreanSound: "백" },
+    { word: "above", meaning: "위에", phonetic: "/əˈbʌv/", koreanSound: "어보브" },
+    { word: "below", meaning: "아래에", phonetic: "/bɪˈloʊ/", koreanSound: "빌로우" },
+    { word: "around", meaning: "주위에", phonetic: "/əˈraʊnd/", koreanSound: "어라운드" },
+    { word: "between", meaning: "~사이에", phonetic: "/bɪˈtwiːn/", koreanSound: "비트윈" },
+    { word: "concert", meaning: "콘서트", phonetic: "/ˈkɑːnsərt/", koreanSound: "콘서트" },
+    { word: "cost", meaning: "비용", phonetic: "/kɔːst/", koreanSound: "코스트" },
+    { word: "discount", meaning: "할인", phonetic: "/ˈdɪskaʊnt/", koreanSound: "디스카운트" },
+    { word: "escalator", meaning: "에스컬레이터", phonetic: "/ˈeskəleɪtər/", koreanSound: "에스컬레이터" },
+    { word: "favorite", meaning: "가장 좋아하는", phonetic: "/ˈfeɪvərɪt/", koreanSound: "페이보릿" },
+    { word: "ground", meaning: "땅", phonetic: "/ɡraʊnd/", koreanSound: "그라운드" },
+    { word: "hobby", meaning: "취미", phonetic: "/ˈhɑːbi/", koreanSound: "하비" },
+    { word: "inch", meaning: "인치", phonetic: "/ɪntʃ/", koreanSound: "인치" },
+    { word: "jam", meaning: "잼", phonetic: "/dʒæm/", koreanSound: "잼" },
+    { word: "key", meaning: "열쇠", phonetic: "/kiː/", koreanSound: "키" },
+    { word: "light", meaning: "빛, 가벼운", phonetic: "/laɪt/", koreanSound: "라이트" },
+    { word: "movie", meaning: "영화", phonetic: "/ˈmuːvi/", koreanSound: "무비" },
+    { word: "noise", meaning: "소음", phonetic: "/nɔɪz/", koreanSound: "노이즈" },
+    { word: "oven", meaning: "오븐", phonetic: "/ˈʌvn/", koreanSound: "오븐" },
+    { word: "pepper", meaning: "후추", phonetic: "/ˈpepər/", koreanSound: "페퍼" },
+    { word: "quarter", meaning: "4분의 1", phonetic: "/ˈkwɔːrtər/", koreanSound: "쿼터" },
+    { word: "roof", meaning: "지붕", phonetic: "/ruːf/", koreanSound: "루프" },
+    { word: "science", meaning: "과학", phonetic: "/ˈsaɪəns/", koreanSound: "사이언스" },
+    { word: "tent", meaning: "텐트", phonetic: "/tent/", koreanSound: "텐트" },
+    { word: "uncle", meaning: "삼촌", phonetic: "/ˈʌŋkl/", koreanSound: "엉클" },
+    { word: "view", meaning: "경치", phonetic: "/vjuː/", koreanSound: "뷰" },
+    { word: "weekday", meaning: "평일", phonetic: "/ˈwiːkdeɪ/", koreanSound: "위크데이" },
+    { word: "xylophone", meaning: "실로폰", phonetic: "/ˈzaɪləfoʊn/", koreanSound: "자일로폰" },
+    { word: "yard", meaning: "마당", phonetic: "/jɑːrd/", koreanSound: "야드" },
+    { word: "zero", meaning: "0, 영", phonetic: "/ˈzɪroʊ/", koreanSound: "제로" },
+    { word: "always", meaning: "항상", phonetic: "/ˈɔːlweɪz/", koreanSound: "올웨이즈" },
+    { word: "carefully", meaning: "조심스럽게", phonetic: "/ˈkerfəli/", koreanSound: "케어풀리" },
+    { word: "downstairs", meaning: "아래층에", phonetic: "/ˌdaʊnˈsterz/", koreanSound: "다운스테어즈" },
+    { word: "everywhere", meaning: "어디에나", phonetic: "/ˈevriwer/", koreanSound: "에브리웨어" },
+    { word: "fast", meaning: "빨리", phonetic: "/fæst/", koreanSound: "패스트" },
+    { word: "here", meaning: "여기에", phonetic: "/hɪr/", koreanSound: "히어" },
+    { word: "instead", meaning: "대신에", phonetic: "/ɪnˈsted/", koreanSound: "인스테드" },
+    { word: "just", meaning: "단지", phonetic: "/dʒʌst/", koreanSound: "저스트" },
+    { word: "late", meaning: "늦게", phonetic: "/leɪt/", koreanSound: "레이트" },
+    { word: "maybe", meaning: "아마도", phonetic: "/ˈmeɪbi/", koreanSound: "메이비" },
+    { word: "never", meaning: "결코 ~않다", phonetic: "/ˈnevər/", koreanSound: "네버" },
+    { word: "often", meaning: "자주", phonetic: "/ˈɔːfən/", koreanSound: "오픈" },
+    { word: "probably", meaning: "아마도", phonetic: "/ˈprɑːbəbli/", koreanSound: "프라버블리" },
+    { word: "really", meaning: "정말로", phonetic: "/ˈriːəli/", koreanSound: "리얼리" },
+    { word: "slowly", meaning: "천천히", phonetic: "/ˈsloʊli/", koreanSound: "슬로울리" },
+    { word: "there", meaning: "거기에", phonetic: "/ðer/", koreanSound: "데어" },
+    { word: "usually", meaning: "보통", phonetic: "/ˈjuːʒuəli/", koreanSound: "유주얼리" },
+    { word: "very", meaning: "매우", phonetic: "/ˈveri/", koreanSound: "베리" },
+    { word: "well", meaning: "잘", phonetic: "/wel/", koreanSound: "웰" },
+    { word: "after", meaning: "~후에", phonetic: "/ˈæftər/", koreanSound: "애프터" },
+    { word: "before", meaning: "~전에", phonetic: "/bɪˈfɔːr/", koreanSound: "비포" },
+    { word: "but", meaning: "그러나", phonetic: "/bʌt/", koreanSound: "벗" },
+    { word: "so", meaning: "그래서", phonetic: "/soʊ/", koreanSound: "쏘" },
+    { word: "if", meaning: "만약", phonetic: "/ɪf/", koreanSound: "이프" },
+    { word: "or", meaning: "또는", phonetic: "/ɔːr/", koreanSound: "오어" },
+    { word: "because", meaning: "왜냐하면", phonetic: "/bɪˈkɔːz/", koreanSound: "비코즈" },
+    { word: "album", meaning: "앨범", phonetic: "/ˈælbəm/", koreanSound: "앨범" },
+    { word: "artist", meaning: "예술가", phonetic: "/ˈɑːrtɪst/", koreanSound: "아티스트" },
+    { word: "captain", meaning: "주장, 선장", phonetic: "/ˈkæptɪn/", koreanSound: "캡틴" },
+    { word: "champion", meaning: "챔피언", phonetic: "/ˈtʃæmpiən/", koreanSound: "챔피언" },
+    { word: "customer", meaning: "고객", phonetic: "/ˈkʌstəmər/", koreanSound: "커스터머" },
+    { word: "detective", meaning: "탐정", phonetic: "/dɪˈtektɪv/", koreanSound: "디텍티브" },
+    { word: "engineer", meaning: "엔지니어", phonetic: "/ˌendʒɪˈnɪr/", koreanSound: "엔지니어" },
+    { word: "foreigner", meaning: "외국인", phonetic: "/ˈfɔːrənər/", koreanSound: "포리너" },
+    { word: "guest", meaning: "손님", phonetic: "/ɡest/", koreanSound: "게스트" },
+    { word: "hero", meaning: "영웅", phonetic: "/ˈhɪroʊ/", koreanSound: "히어로" },
+    { word: "king", meaning: "왕", phonetic: "/kɪŋ/", koreanSound: "킹" },
+    { word: "member", meaning: "회원", phonetic: "/ˈmembər/", koreanSound: "멤버" },
+    { word: "neighbor", meaning: "이웃", phonetic: "/ˈneɪbər/", koreanSound: "네이버" },
+    { word: "officer", meaning: "경찰관", phonetic: "/ˈɔːfɪsər/", koreanSound: "오피서" },
+    { word: "parent", meaning: "부모", phonetic: "/ˈperənt/", koreanSound: "페어런트" },
+    { word: "prince", meaning: "왕자", phonetic: "/prɪns/", koreanSound: "프린스" },
+    { word: "princess", meaning: "공주", phonetic: "/ˈprɪnses/", koreanSound: "프린세스" },
+    { word: "scientist", meaning: "과학자", phonetic: "/ˈsaɪəntɪst/", koreanSound: "사이언티스트" },
+    { word: "soldier", meaning: "군인", phonetic: "/ˈsoʊldʒər/", koreanSound: "솔저" },
+    { word: "stranger", meaning: "낯선 사람", phonetic: "/ˈstreɪndʒər/", koreanSound: "스트레인저" },
+    { word: "tourist", meaning: "관광객", phonetic: "/ˈtʊrɪst/", koreanSound: "투어리스트" },
+    { word: "winner", meaning: "승자", phonetic: "/ˈwɪnər/", koreanSound: "위너" },
+    { word: "writer", meaning: "작가", phonetic: "/ˈraɪtər/", koreanSound: "라이터" },
+    { word: "blow", meaning: "불다", phonetic: "/bloʊ/", koreanSound: "블로우" },
+    { word: "borrow", meaning: "빌리다", phonetic: "/ˈbɔːroʊ/", koreanSound: "보로우" },
+    { word: "cheer", meaning: "응원하다", phonetic: "/tʃɪr/", koreanSound: "치어" },
+    { word: "climb", meaning: "오르다", phonetic: "/klaɪm/", koreanSound: "클라임" },
+    { word: "collect", meaning: "모으다", phonetic: "/kəˈlekt/", koreanSound: "컬렉트" },
+    { word: "complain", meaning: "불평하다", phonetic: "/kəmˈpleɪn/", koreanSound: "컴플레인" },
+    { word: "continue", meaning: "계속하다", phonetic: "/kənˈtɪnjuː/", koreanSound: "컨티뉴" },
+    { word: "cough", meaning: "기침하다", phonetic: "/kɔːf/", koreanSound: "코프" },
+    { word: "count", meaning: "세다", phonetic: "/kaʊnt/", koreanSound: "카운트" },
+    { word: "cover", meaning: "덮다", phonetic: "/ˈkʌvər/", koreanSound: "커버" },
+    { word: "crash", meaning: "충돌하다", phonetic: "/kræʃ/", koreanSound: "크래쉬" },
+    { word: "cross", meaning: "건너다", phonetic: "/krɔːs/", koreanSound: "크로스" },
+    { word: "damage", meaning: "손상시키다", phonetic: "/ˈdæmɪdʒ/", koreanSound: "대미지" },
+    { word: "deliver", meaning: "배달하다", phonetic: "/dɪˈlɪvər/", koreanSound: "딜리버" },
+    { word: "dig", meaning: "파다", phonetic: "/dɪɡ/", koreanSound: "디그" },
+    { word: "drop", meaning: "떨어뜨리다", phonetic: "/drɑːp/", koreanSound: "드랍" },
+    { word: "earn", meaning: "벌다", phonetic: "/ɜːrn/", koreanSound: "언" },
+    { word: "enter", meaning: "들어가다", phonetic: "/ˈentər/", koreanSound: "엔터" },
+    { word: "erase", meaning: "지우다", phonetic: "/ɪˈreɪs/", koreanSound: "이레이즈" },
+    { word: "feed", meaning: "먹이를 주다", phonetic: "/fiːd/", koreanSound: "피드" },
+    { word: "fill", meaning: "채우다", phonetic: "/fɪl/", koreanSound: "필" },
+    { word: "float", meaning: "뜨다", phonetic: "/floʊt/", koreanSound: "플로트" },
+    { word: "fold", meaning: "접다", phonetic: "/foʊld/", koreanSound: "폴드" },
+    { word: "greet", meaning: "인사하다", phonetic: "/ɡriːt/", koreanSound: "그리트" },
+    { word: "hang", meaning: "걸다", phonetic: "/hæŋ/", koreanSound: "행" },
+    { word: "hide", meaning: "숨다", phonetic: "/haɪd/", koreanSound: "하이드" },
+    { word: "hunt", meaning: "사냥하다", phonetic: "/hʌnt/", koreanSound: "헌트" },
+    { word: "hurry", meaning: "서두르다", phonetic: "/ˈhɜːri/", koreanSound: "허리" },
+    { word: "introduce", meaning: "소개하다", phonetic: "/ˌɪntrəˈduːs/", koreanSound: "인트로듀스" },
+    { word: "invite", meaning: "초대하다", phonetic: "/ɪnˈvaɪt/", koreanSound: "인바이트" },
+    { word: "lend", meaning: "빌려주다", phonetic: "/lend/", koreanSound: "렌드" },
+    { word: "lift", meaning: "들어올리다", phonetic: "/lɪft/", koreanSound: "리프트" },
+    { word: "marry", meaning: "결혼하다", phonetic: "/ˈmæri/", koreanSound: "매리" },
+    { word: "mix", meaning: "섞다", phonetic: "/mɪks/", koreanSound: "믹스" },
+    { word: "nod", meaning: "끄덕이다", phonetic: "/nɑːd/", koreanSound: "나드" },
+    { word: "park", meaning: "주차하다", phonetic: "/pɑːrk/", koreanSound: "파크" },
+    { word: "pick", meaning: "고르다", phonetic: "/pɪk/", koreanSound: "픽" },
+    { word: "plant", meaning: "심다", phonetic: "/plænt/", koreanSound: "플랜트" },
+    { word: "point", meaning: "가리키다", phonetic: "/pɔɪnt/", koreanSound: "포인트" },
+    { word: "pour", meaning: "붓다", phonetic: "/pɔːr/", koreanSound: "포어" },
+    { word: "practice", meaning: "연습하다", phonetic: "/ˈpræktɪs/", koreanSound: "프랙티스" },
+    { word: "promise", meaning: "약속하다", phonetic: "/ˈprɑːmɪs/", koreanSound: "프라미스" },
+    { word: "protect", meaning: "보호하다", phonetic: "/prəˈtekt/", koreanSound: "프로텍트" },
+    { word: "recycle", meaning: "재활용하다", phonetic: "/ˌriːˈsaɪkl/", koreanSound: "리사이클" },
+    { word: "relax", meaning: "쉬다", phonetic: "/rɪˈlæks/", koreanSound: "릴랙스" },
+    { word: "repeat", meaning: "반복하다", phonetic: "/rɪˈpiːt/", koreanSound: "리피트" },
+    { word: "return", meaning: "돌아오다", phonetic: "/rɪˈtɜːrn/", koreanSound: "리턴" },
+    { word: "save", meaning: "구하다, 저축하다", phonetic: "/seɪv/", koreanSound: "세이브" },
+    { word: "serve", meaning: "제공하다", phonetic: "/sɜːrv/", koreanSound: "서브" },
+    { word: "shake", meaning: "흔들다", phonetic: "/ʃeɪk/", koreanSound: "쉐이크" },
+    { word: "skate", meaning: "스케이트를 타다", phonetic: "/skeɪt/", koreanSound: "스케이트" },
+    { word: "smell", meaning: "냄새를 맡다", phonetic: "/smel/", koreanSound: "스멜" },
+    { word: "solve", meaning: "해결하다", phonetic: "/sɑːlv/", koreanSound: "솔브" },
+    { word: "spend", meaning: "쓰다(돈, 시간)", phonetic: "/spend/", koreanSound: "스펜드" },
+    { word: "spill", meaning: "엎지르다", phonetic: "/spɪl/", koreanSound: "스필" },
+    { word: "stay", meaning: "머무르다", phonetic: "/steɪ/", koreanSound: "스테이" },
+    { word: "stretch", meaning: "뻗다", phonetic: "/stretʃ/", koreanSound: "스트레치" },
+    { word: "surprise", meaning: "놀라게 하다", phonetic: "/sərˈpraɪz/", koreanSound: "서프라이즈" },
+    { word: "swing", meaning: "흔들리다", phonetic: "/swɪŋ/", koreanSound: "스윙" },
+    { word: "tie", meaning: "묶다", phonetic: "/taɪ/", koreanSound: "타이" },
+    { word: "touch", meaning: "만지다", phonetic: "/tʌtʃ/", koreanSound: "터치" },
+    { word: "wake", meaning: "깨다", phonetic: "/weɪk/", koreanSound: "웨이크" },
+    { word: "win", meaning: "이기다", phonetic: "/wɪn/", koreanSound: "윈" },
+    { word: "wrap", meaning: "포장하다", phonetic: "/ræp/", koreanSound: "랩" },
+    { word: "active", meaning: "활동적인", phonetic: "/ˈæktɪv/", koreanSound: "액티브" },
+    { word: "afraid", meaning: "두려워하는", phonetic: "/əˈfreɪd/", koreanSound: "어프레이드" },
+    { word: "alike", meaning: "비슷한", phonetic: "/əˈlaɪk/", koreanSound: "얼라이크" },
+    { word: "alive", meaning: "살아있는", phonetic: "/əˈlaɪv/", koreanSound: "얼라이브" },
+    { word: "amazing", meaning: "놀라운", phonetic: "/əˈmeɪzɪŋ/", koreanSound: "어메이징" },
+    { word: "ancient", meaning: "고대의", phonetic: "/ˈeɪnʃənt/", koreanSound: "에인션트" },
+    { word: "awake", meaning: "깨어있는", phonetic: "/əˈweɪk/", koreanSound: "어웨이크" },
+    { word: "awful", meaning: "끔찍한", phonetic: "/ˈɔːfl/", koreanSound: "오펄" },
+    { word: "basic", meaning: "기본적인", phonetic: "/ˈbeɪsɪk/", koreanSound: "베이직" },
+    { word: "blind", meaning: "눈이 먼", phonetic: "/blaɪnd/", koreanSound: "블라인드" },
+    { word: "bright", meaning: "밝은", phonetic: "/braɪt/", koreanSound: "브라이트" },
+    { word: "calm", meaning: "차분한", phonetic: "/kɑːm/", koreanSound: "캄" },
+    { word: "careful", meaning: "조심스러운", phonetic: "/ˈkerfl/", koreanSound: "케어풀" },
+    { word: "cheap", meaning: "저렴한", phonetic: "/tʃiːp/", koreanSound: "칩" },
+    { word: "clear", meaning: "맑은, 명확한", phonetic: "/klɪr/", koreanSound: "클리어" },
+    { word: "clever", meaning: "영리한", phonetic: "/ˈklevər/", koreanSound: "클레버" },
+    { word: "comfortable", meaning: "편안한", phonetic: "/ˈkʌmfərtəbl/", koreanSound: "컴포터블" },
+    { word: "common", meaning: "흔한", phonetic: "/ˈkɑːmən/", koreanSound: "코먼" },
+    { word: "correct", meaning: "옳은", phonetic: "/kəˈrekt/", koreanSound: "코렉트" },
+    { word: "crazy", meaning: "미친", phonetic: "/ˈkreɪzi/", koreanSound: "크레이지" },
+    { word: "curly", meaning: "곱슬의", phonetic: "/ˈkɜːrli/", koreanSound: "컬리" },
+    { word: "dangerous", meaning: "위험한", phonetic: "/ˈdeɪndʒərəs/", koreanSound: "데인저러스" },
+    { word: "dead", meaning: "죽은", phonetic: "/ded/", koreanSound: "데드" },
+    { word: "deep", meaning: "깊은", phonetic: "/diːp/", koreanSound: "딥" },
+    { word: "different", meaning: "다른", phonetic: "/ˈdɪfrənt/", koreanSound: "디퍼런트" },
+    { word: "difficult", meaning: "어려운", phonetic: "/ˈdɪfɪkəlt/", koreanSound: "디피컬트" },
+    { word: "diligent", meaning: "성실한", phonetic: "/ˈdɪlɪdʒənt/", koreanSound: "딜리전트" },
+    { word: "dirty", meaning: "더러운", phonetic: "/ˈdɜːrti/", koreanSound: "더티" },
+    { word: "double", meaning: "두 배의", phonetic: "/ˈdʌbl/", koreanSound: "더블" },
+    { word: "dull", meaning: "지루한", phonetic: "/dʌl/", koreanSound: "덜" },
+    { word: "each", meaning: "각각의", phonetic: "/iːtʃ/", koreanSound: "이치" },
+    { word: "easy", meaning: "쉬운", phonetic: "/ˈiːzi/", koreanSound: "이지" },
+    { word: "electric", meaning: "전기의", phonetic: "/ɪˈlektrɪk/", koreanSound: "일렉트릭" },
+    { word: "enough", meaning: "충분한", phonetic: "/ɪˈnʌf/", koreanSound: "이너프" },
+    { word: "excellent", meaning: "훌륭한", phonetic: "/ˈeksələnt/", koreanSound: "엑설런트" },
+    { word: "exciting", meaning: "신나는", phonetic: "/ɪkˈsaɪtɪŋ/", koreanSound: "익사이팅" },
+    { word: "expensive", meaning: "비싼", phonetic: "/ɪkˈspensɪv/", koreanSound: "익스펜시브" },
+    { word: "extra", meaning: "여분의", phonetic: "/ˈekstrə/", koreanSound: "엑스트라" },
+    { word: "fair", meaning: "공평한", phonetic: "/fer/", koreanSound: "페어" },
+    { word: "false", meaning: "거짓의", phonetic: "/fɔːls/", koreanSound: "폴스" },
+    { word: "fantastic", meaning: "환상적인", phonetic: "/fænˈtæstɪk/", koreanSound: "판타스틱" },
+    { word: "far", meaning: "먼", phonetic: "/fɑːr/", koreanSound: "파" },
+    { word: "final", meaning: "마지막의", phonetic: "/ˈfaɪnl/", koreanSound: "파이널" },
+    { word: "fine", meaning: "좋은", phonetic: "/faɪn/", koreanSound: "파인" },
+    { word: "flat", meaning: "평평한", phonetic: "/flæt/", koreanSound: "플랫" },
+    { word: "foolish", meaning: "어리석은", phonetic: "/ˈfuːlɪʃ/", koreanSound: "풀리쉬" },
+    { word: "foreign", meaning: "외국의", phonetic: "/ˈfɔːrən/", koreanSound: "포린" },
+    { word: "free", meaning: "자유로운, 무료의", phonetic: "/friː/", koreanSound: "프리" },
+    { word: "fresh", meaning: "신선한", phonetic: "/freʃ/", koreanSound: "프레쉬" },
+    { word: "full", meaning: "가득 찬", phonetic: "/fʊl/", koreanSound: "풀" },
+    { word: "funny", meaning: "재미있는", phonetic: "/ˈfʌni/", koreanSound: "퍼니" },
+    { word: "global", meaning: "세계적인", phonetic: "/ˈɡloʊbl/", koreanSound: "글로벌" },
+    { word: "golden", meaning: "금빛의", phonetic: "/ˈɡoʊldən/", koreanSound: "골든" },
+    { word: "great", meaning: "위대한", phonetic: "/ɡreɪt/", koreanSound: "그레이트" },
+    { word: "handsome", meaning: "잘생긴", phonetic: "/ˈhænsəm/", koreanSound: "핸섬" },
+    { word: "hard", meaning: "어려운, 딱딱한", phonetic: "/hɑːrd/", koreanSound: "하드" },
+    { word: "healthy", meaning: "건강한", phonetic: "/ˈhelθi/", koreanSound: "헬시" },
+    { word: "high", meaning: "높은", phonetic: "/haɪ/", koreanSound: "하이" },
+    { word: "huge", meaning: "거대한", phonetic: "/hjuːdʒ/", koreanSound: "휴지" },
+    { word: "human", meaning: "인간의", phonetic: "/ˈhjuːmən/", koreanSound: "휴먼" },
+    { word: "hungry", meaning: "배고픈", phonetic: "/ˈhʌŋɡri/", koreanSound: "헝그리" },
+    { word: "important", meaning: "중요한", phonetic: "/ɪmˈpɔːrtnt/", koreanSound: "임포턴트" },
+    { word: "interesting", meaning: "흥미로운", phonetic: "/ˈɪntrəstɪŋ/", koreanSound: "인터레스팅" },
+    { word: "international", meaning: "국제적인", phonetic: "/ˌɪntərˈnæʃnəl/", koreanSound: "인터내셔널" },
+    { word: "joyful", meaning: "기쁜", phonetic: "/ˈdʒɔɪfl/", koreanSound: "조이풀" },
+    { word: "large", meaning: "큰", phonetic: "/lɑːrdʒ/", koreanSound: "라지" },
+    { word: "last", meaning: "마지막의", phonetic: "/læst/", koreanSound: "라스트" },
+    { word: "late", meaning: "늦은", phonetic: "/leɪt/", koreanSound: "레이트" },
+    { word: "little", meaning: "작은", phonetic: "/ˈlɪtl/", koreanSound: "리틀" },
+    { word: "lonely", meaning: "외로운", phonetic: "/ˈloʊnli/", koreanSound: "론리" },
+    { word: "loud", meaning: "시끄러운", phonetic: "/laʊd/", koreanSound: "라우드" },
+    { word: "lovely", meaning: "사랑스러운", phonetic: "/ˈlʌvli/", koreanSound: "러블리" },
+    { word: "low", meaning: "낮은", phonetic: "/loʊ/", koreanSound: "로우" },
+    { word: "lucky", meaning: "운이 좋은", phonetic: "/ˈlʌki/", koreanSound: "럭키" },
+    { word: "main", meaning: "주요한", phonetic: "/meɪn/", koreanSound: "메인" },
+    { word: "many", meaning: "많은", phonetic: "/ˈmeni/", koreanSound: "매니" },
+    { word: "medical", meaning: "의료의", phonetic: "/ˈmedɪkl/", koreanSound: "메디컬" },
+    { word: "middle", meaning: "중간의", phonetic: "/ˈmɪdl/", koreanSound: "미들" },
+    { word: "modern", meaning: "현대의", phonetic: "/ˈmɑːdərn/", koreanSound: "모던" },
+    { word: "much", meaning: "많은", phonetic: "/mʌtʃ/", koreanSound: "머치" },
+    { word: "narrow", meaning: "좁은", phonetic: "/ˈnæroʊ/", koreanSound: "내로우" },
+    { word: "natural", meaning: "자연의", phonetic: "/ˈnætʃrəl/", koreanSound: "내추럴" },
+    { word: "naughty", meaning: "장난꾸러기인", phonetic: "/ˈnɔːti/", koreanSound: "노티" },
+    { word: "near", meaning: "가까운", phonetic: "/nɪr/", koreanSound: "니어" },
+    { word: "necessary", meaning: "필요한", phonetic: "/ˈnesəseri/", koreanSound: "네서세리" },
+    { word: "next", meaning: "다음의", phonetic: "/nekst/", koreanSound: "넥스트" },
+    { word: "noisy", meaning: "시끄러운", phonetic: "/ˈnɔɪzi/", koreanSound: "노이지" },
+    { word: "normal", meaning: "정상의", phonetic: "/ˈnɔːrml/", koreanSound: "노멀" },
+    { word: "nuclear", meaning: "핵의", phonetic: "/ˈnuːkliər/", koreanSound: "뉴클리어" },
+    { word: "open", meaning: "열린", phonetic: "/ˈoʊpən/", koreanSound: "오픈" },
+    { word: "other", meaning: "다른", phonetic: "/ˈʌðər/", koreanSound: "아더" },
+    { word: "outdoor", meaning: "야외의", phonetic: "/ˈaʊtdɔːr/", koreanSound: "아웃도어" },
+    { word: "own", meaning: "자신의", phonetic: "/oʊn/", koreanSound: "온" },
+    { word: "pale", meaning: "창백한", phonetic: "/peɪl/", koreanSound: "페일" },
+    { word: "peaceful", meaning: "평화로운", phonetic: "/ˈpiːsfl/", koreanSound: "피스풀" },
+    { word: "plastic", meaning: "플라스틱의", phonetic: "/ˈplæstɪk/", koreanSound: "플라스틱" },
+    { word: "pleasant", meaning: "즐거운", phonetic: "/ˈpleznt/", koreanSound: "플레전트" },
+    { word: "poor", meaning: "가난한", phonetic: "/pʊr/", koreanSound: "푸어" },
+    { word: "possible", meaning: "가능한", phonetic: "/ˈpɑːsəbl/", koreanSound: "파서블" },
+    { word: "powerful", meaning: "강력한", phonetic: "/ˈpaʊərfl/", koreanSound: "파워풀" },
+    { word: "precious", meaning: "귀중한", phonetic: "/ˈpreʃəs/", koreanSound: "프레셔스" },
+    { word: "pretty", meaning: "예쁜", phonetic: "/ˈprɪti/", koreanSound: "프리티" },
+    { word: "proud", meaning: "자랑스러운", phonetic: "/praʊd/", koreanSound: "프라우드" },
+    { word: "public", meaning: "공공의", phonetic: "/ˈpʌblɪk/", koreanSound: "퍼블릭" },
+    { word: "pure", meaning: "순수한", phonetic: "/pjʊr/", koreanSound: "퓨어" },
+    { word: "real", meaning: "진짜의", phonetic: "/ˈriːəl/", koreanSound: "리얼" },
+    { word: "rich", meaning: "부유한", phonetic: "/rɪtʃ/", koreanSound: "리치" },
+    { word: "right", meaning: "오른쪽의, 옳은", phonetic: "/raɪt/", koreanSound: "라이트" },
+    { word: "rough", meaning: "거친", phonetic: "/rʌf/", koreanSound: "러프" },
+    { word: "round", meaning: "둥근", phonetic: "/raʊnd/", koreanSound: "라운드" },
+    { word: "rude", meaning: "무례한", phonetic: "/ruːd/", koreanSound: "루드" },
+    { word: "salty", meaning: "짠", phonetic: "/ˈsɔːlti/", koreanSound: "솔티" },
+    { word: "same", meaning: "같은", phonetic: "/seɪm/", koreanSound: "세임" },
+    { word: "satisfied", meaning: "만족한", phonetic: "/ˈsætɪsfaɪd/", koreanSound: "새티스파이드" },
+    { word: "scared", meaning: "무서워하는", phonetic: "/skerd/", koreanSound: "스케어드" },
+    { word: "secret", meaning: "비밀의", phonetic: "/ˈsiːkrət/", koreanSound: "시크릿" },
+    { word: "serious", meaning: "심각한", phonetic: "/ˈsɪriəs/", koreanSound: "시리어스" },
+    { word: "several", meaning: "몇몇의", phonetic: "/ˈsevrəl/", koreanSound: "세브럴" },
+    { word: "sharp", meaning: "날카로운", phonetic: "/ʃɑːrp/", koreanSound: "샤프" },
+    { word: "shiny", meaning: "빛나는", phonetic: "/ˈʃaɪni/", koreanSound: "샤이니" },
+    { word: "short", meaning: "짧은", phonetic: "/ʃɔːrt/", koreanSound: "쇼트" },
+    { word: "shy", meaning: "부끄러워하는", phonetic: "/ʃaɪ/", koreanSound: "샤이" },
+    { word: "similar", meaning: "비슷한", phonetic: "/ˈsɪmələr/", koreanSound: "시밀러" },
+    { word: "simple", meaning: "간단한", phonetic: "/ˈsɪmpl/", koreanSound: "심플" },
+    { word: "single", meaning: "하나의", phonetic: "/ˈsɪŋɡl/", koreanSound: "싱글" },
+    { word: "sleepy", meaning: "졸린", phonetic: "/ˈsliːpi/", koreanSound: "슬리피" },
+    { word: "slim", meaning: "날씬한", phonetic: "/slɪm/", koreanSound: "슬림" },
+    { word: "smart", meaning: "똑똑한", phonetic: "/smɑːrt/", koreanSound: "스마트" },
+    { word: "smooth", meaning: "부드러운", phonetic: "/smuːð/", koreanSound: "스무드" },
+    { word: "soft", meaning: "부드러운", phonetic: "/sɔːft/", koreanSound: "소프트" },
+    { word: "sorry", meaning: "미안한", phonetic: "/ˈsɔːri/", koreanSound: "쏘리" },
+    { word: "sour", meaning: "신", phonetic: "/ˈsaʊər/", koreanSound: "사워" },
+    { word: "special", meaning: "특별한", phonetic: "/ˈspeʃl/", koreanSound: "스페셜" },
+    { word: "spicy", meaning: "매운", phonetic: "/ˈspaɪsi/", koreanSound: "스파이시" },
+    { word: "square", meaning: "정사각형의", phonetic: "/skwer/", koreanSound: "스퀘어" },
+    { word: "strange", meaning: "이상한", phonetic: "/streɪndʒ/", koreanSound: "스트레인지" },
+    { word: "strict", meaning: "엄격한", phonetic: "/strɪkt/", koreanSound: "스트릭트" },
+    { word: "strong", meaning: "강한", phonetic: "/strɔːŋ/", koreanSound: "스트롱" },
+    { word: "stupid", meaning: "어리석은", phonetic: "/ˈstuːpɪd/", koreanSound: "스튜피드" },
+    { word: "successful", meaning: "성공적인", phonetic: "/səkˈsesfl/", koreanSound: "석세스풀" },
+    { word: "sudden", meaning: "갑작스러운", phonetic: "/ˈsʌdn/", koreanSound: "서든" },
+    { word: "sure", meaning: "확신하는", phonetic: "/ʃʊr/", koreanSound: "슈어" },
+    { word: "sweet", meaning: "달콤한", phonetic: "/swiːt/", koreanSound: "스위트" },
+    { word: "talkative", meaning: "말이 많은", phonetic: "/ˈtɔːkətɪv/", koreanSound: "토커티브" },
+    { word: "tall", meaning: "키가 큰", phonetic: "/tɔːl/", koreanSound: "톨" },
+    { word: "terrible", meaning: "끔찍한", phonetic: "/ˈterəbl/", koreanSound: "테러블" },
+    { word: "thick", meaning: "두꺼운", phonetic: "/θɪk/", koreanSound: "씩" },
+    { word: "thin", meaning: "얇은, 마른", phonetic: "/θɪn/", koreanSound: "씬" },
+    { word: "tiny", meaning: "아주 작은", phonetic: "/ˈtaɪni/", koreanSound: "타이니" },
+    { word: "tough", meaning: "힘든", phonetic: "/tʌf/", koreanSound: "터프" },
+    { word: "true", meaning: "사실의", phonetic: "/truː/", koreanSound: "트루" },
+    { word: "ugly", meaning: "못생긴", phonetic: "/ˈʌɡli/", koreanSound: "어글리" },
+    { word: "unhappy", meaning: "불행한", phonetic: "/ʌnˈhæpi/", koreanSound: "언해피" },
+    { word: "useful", meaning: "유용한", phonetic: "/ˈjuːsfl/", koreanSound: "유스풀" },
+    { word: "various", meaning: "다양한", phonetic: "/ˈveriəs/", koreanSound: "베리어스" },
+    { word: "weak", meaning: "약한", phonetic: "/wiːk/", koreanSound: "위크" },
+    { word: "wet", meaning: "젖은", phonetic: "/wet/", koreanSound: "웻" },
+    { word: "whole", meaning: "전체의", phonetic: "/hoʊl/", koreanSound: "홀" },
+    { word: "wide", meaning: "넓은", phonetic: "/waɪd/", koreanSound: "와이드" },
+    { word: "wild", meaning: "야생의", phonetic: "/waɪld/", koreanSound: "와일드" },
+    { word: "wise", meaning: "현명한", phonetic: "/waɪz/", koreanSound: "와이즈" },
+    { word: "wonderful", meaning: "멋진", phonetic: "/ˈwʌndərfl/", koreanSound: "원더풀" },
+    { word: "wooden", meaning: "나무로 된", phonetic: "/ˈwʊdn/", koreanSound: "우든" },
+    { word: "wrong", meaning: "틀린", phonetic: "/rɔːŋ/", koreanSound: "롱" }
+        ];
+
+        let currentIndex = 0;
+        let isMeaningVisible = false;
+        let favorites = []; // 찜한 단어 인덱스들
+        let isViewingFavorites = false; // 찜한 단어 모드인지 확인
+        let favoriteWords = []; // 찜한 단어들만 따로 저장
+        
+        // 터치/스와이프 관련 변수들
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchEndX = 0;
+        let touchEndY = 0;
+        let minSwipeDistance = 50; // 최소 스와이프 거리
+
+        // DOM 요소들
+        const wordDisplay = document.getElementById('wordDisplay');
+        const phoneticDisplay = document.getElementById('phoneticDisplay');
+        const koreanSoundDisplay = document.getElementById('koreanSoundDisplay');
+        const meaningDisplay = document.getElementById('meaningDisplay');
+        const showMeaningBtn = document.getElementById('showMeaningBtn');
+        const speakBtn = document.getElementById('speakBtn');
+        const favoriteBtn = document.getElementById('favoriteBtn');
+        const showFavoritesBtn = document.getElementById('showFavoritesBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const jumpBtn = document.getElementById('jumpBtn');
+        const jumpInput = document.getElementById('jumpInput');
+        const progressBar = document.getElementById('progressBar');
+        const stats = document.getElementById('stats');
+        const card = document.getElementById('card');
+
+        // 로컬스토리지에서 찜한 단어 불러오기
+        function loadFavorites() {
+            const savedFavorites = localStorage.getItem('favoriteWords');
+            if (savedFavorites) {
+                favorites = JSON.parse(savedFavorites);
+            }
+        }
+
+        // 로컬스토리지에 찜한 단어 저장하기
+        function saveFavorites() {
+            localStorage.setItem('favoriteWords', JSON.stringify(favorites));
+        }
+        // 로컬스토리지에서 현재 위치 불러오기
+        function loadCurrentIndex() {
+            const savedIndex = localStorage.getItem('currentWordIndex');
+            if (savedIndex !== null) {
+                currentIndex = parseInt(savedIndex);
+                // 범위 체크
+                const maxIndex = isViewingFavorites ? favoriteWords.length - 1 : words.length - 1;
+                if (currentIndex > maxIndex) currentIndex = 0;
+                if (currentIndex < 0) currentIndex = 0;
+            }
+        }
+
+        // 로컬스토리지에 현재 위치 저장하기
+        function saveCurrentIndex() {
+            localStorage.setItem('currentWordIndex', currentIndex.toString());
+        }
+        // 로컬스토리지에서 단어 불러오기 (사용 안 함 - 기본 단어만 사용)
+        function loadWords() {
+            // 기본 단어 목록만 사용
+        }
+
+        // 로컬스토리지에 단어 저장하기 (사용 안 함 - 기본 단어만 사용)
+        function saveWords() {
+            // 기본 단어 목록은 변경하지 않음
+        }
+
+        // 찜한 단어 목록 업데이트
+        function updateFavoriteWords() {
+            favoriteWords = favorites.map(index => words[index]).filter(word => word);
+        }
+
+        // 찜하기/찜 해제
+        function toggleFavorite() {
+            const currentWordIndex = isViewingFavorites ? 
+                words.indexOf(favoriteWords[currentIndex]) : currentIndex;
+            
+            if (favorites.includes(currentWordIndex)) {
+                // 찜 해제
+                favorites = favorites.filter(index => index !== currentWordIndex);
+                
+                // 찜한 단어 보기 모드에서 찜 해제한 경우
+                if (isViewingFavorites) {
+                    updateFavoriteWords();
+                    if (favoriteWords.length === 0) {
+                        // 찜한 단어가 모두 없어지면 전체 단어 모드로 돌아가기
+                        showAllWords();
+                        return;
+                    }
+                    // 현재 인덱스 조정
+                    if (currentIndex >= favoriteWords.length) {
+                        currentIndex = favoriteWords.length - 1;
+                    }
+                }
+            } else {
+                // 찜하기
+                favorites.push(currentWordIndex);
+            }
+            
+            saveFavorites();
+            updateDisplay();
+        }
+
+        // 찜한 단어들만 보기
+        function showFavorites() {
+            if (favorites.length === 0) {
+                alert('찜한 단어가 없습니다. 먼저 ⭐ 버튼으로 단어를 찜해주세요!');
+                return;
+            }
+            
+            isViewingFavorites = true;
+            updateFavoriteWords();
+            currentIndex = 0;
+            
+            // UI 변경
+            document.querySelector('.app-container').classList.add('favorites-mode');
+            showFavoritesBtn.textContent = '📚 전체 단어';
+            
+            // 찜한 단어 헤더 추가
+            const header = document.querySelector('.header');
+            if (!header.querySelector('.favorites-header')) {
+                const favoritesHeader = document.createElement('div');
+                favoritesHeader.className = 'favorites-header';
+                favoritesHeader.innerHTML = `
+                    <div class="favorites-count">📑 찜한 단어 ${favorites.length}개</div>
+                `;
+                header.appendChild(favoritesHeader);
+            }
+            
+            updateDisplay();
+        }
+
+        // 전체 단어 보기
+        function showAllWords() {
+            isViewingFavorites = false;
+            currentIndex = 0;
+            
+            // UI 복원
+            document.querySelector('.app-container').classList.remove('favorites-mode');
+            showFavoritesBtn.textContent = '📑 찜한 단어';
+            
+            // 찜한 단어 헤더 제거
+            const favoritesHeader = document.querySelector('.favorites-header');
+            if (favoritesHeader) {
+                favoritesHeader.remove();
+            }
+            
+            updateDisplay();
+        }
+        // 화면 업데이트
+        function updateDisplay() {
+            const displayWords = isViewingFavorites ? favoriteWords : words;
+            const totalWords = displayWords.length;
+            
+            if (totalWords === 0) {
+                wordDisplay.textContent = "단어가 없습니다";
+                phoneticDisplay.textContent = "";
+                koreanSoundDisplay.textContent = "";
+                meaningDisplay.textContent = "단어를 추가해주세요";
+                return;
+            }
+
+            const currentWord = displayWords[currentIndex];
+            wordDisplay.textContent = currentWord.word;
+            phoneticDisplay.textContent = currentWord.phonetic || "";
+            koreanSoundDisplay.textContent = currentWord.koreanSound || "";
+            meaningDisplay.textContent = currentWord.meaning;
+            
+            // 뜻 숨기기
+            meaningDisplay.classList.remove('show');
+            isMeaningVisible = false;
+            showMeaningBtn.textContent = '뜻 보기';
+            
+            // 진행률 업데이트
+            const progress = ((currentIndex + 1) / totalWords) * 100;
+            progressBar.style.width = progress + '%';
+            
+            // 통계 업데이트
+            const modeText = isViewingFavorites ? '찜한 단어' : '전체 단어';
+            stats.textContent = `${modeText} ${currentIndex + 1} / ${totalWords}`;
+            
+            // Jump 입력창 업데이트
+            jumpInput.max = totalWords;
+            jumpInput.placeholder = `1-${totalWords}`;
+            
+            // 찜하기 버튼 상태 업데이트
+            const currentWordIndex = isViewingFavorites ? 
+                words.indexOf(currentWord) : currentIndex;
+            const isFavorited = favorites.includes(currentWordIndex);
+            
+            if (isFavorited) {
+                favoriteBtn.textContent = '⭐ 찜됨';
+                favoriteBtn.classList.add('btn-favorite-active');
+            } else {
+                favoriteBtn.textContent = '⭐ 찜';
+                favoriteBtn.classList.remove('btn-favorite-active');
+            }
+            
+            // 버튼 상태 업데이트
+            prevBtn.disabled = currentIndex === 0;
+            nextBtn.disabled = currentIndex === totalWords - 1;
+            
+            // 현재 위치 저장
+            saveCurrentIndex();
+            
+            // 카드 애니메이션
+            card.classList.add('pulse');
+            setTimeout(() => card.classList.remove('pulse'), 500);
+        }
+
+        // 뜻 보기/숨기기
+        function toggleMeaning() {
+            if (isMeaningVisible) {
+                meaningDisplay.classList.remove('show');
+                showMeaningBtn.textContent = '뜻 보기';
+            } else {
+                meaningDisplay.classList.add('show');
+                showMeaningBtn.textContent = '뜻 숨기기';
+            }
+            isMeaningVisible = !isMeaningVisible;
+        }
+
+        // 이전 단어
+        function prevWord() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateDisplay();
+            }
+        }
+
+        // 다음 단어
+        function nextWord() {
+            const totalWords = isViewingFavorites ? favoriteWords.length : words.length;
+            if (currentIndex < totalWords - 1) {
+                currentIndex++;
+                updateDisplay();
+            }
+        }
+
+        // 음성 기능
+        function speakWord() {
+            if ('speechSynthesis' in window) {
+                const displayWords = isViewingFavorites ? favoriteWords : words;
+                const currentWord = displayWords[currentIndex];
+                if (!currentWord) return;
+
+                // 진행 중인 음성이 있으면 중단
+                speechSynthesis.cancel();
+
+                const utterance = new SpeechSynthesisUtterance(currentWord.word);
+                
+                // 영어 음성 설정
+                utterance.lang = 'en-US';
+                utterance.rate = 0.8; // 말하기 속도 (0.1-10)
+                utterance.pitch = 1; // 음성 높낮이 (0-2)
+                utterance.volume = 1; // 볼륨 (0-1)
+                
+                // 버튼 상태 변경
+                speakBtn.textContent = '🔊 재생중...';
+                speakBtn.disabled = true;
+                
+                // 음성 재생 완료 후 버튼 복원
+                utterance.onend = function() {
+                    speakBtn.textContent = '🔊 발음 듣기';
+                    speakBtn.disabled = false;
+                };
+                
+                // 오류 발생시 버튼 복원
+                utterance.onerror = function() {
+                    speakBtn.textContent = '🔊 발음 듣기';
+                    speakBtn.disabled = false;
+                    alert('음성 재생 중 오류가 발생했습니다.');
+                };
+                
+                // 음성 재생
+                speechSynthesis.speak(utterance);
+            } else {
+                alert('이 브라우저는 음성 기능을 지원하지 않습니다.');
+            }
+        }
+        // 특정 단어 번호로 이동
+        function jumpToWord() {
+            const jumpNumber = parseInt(jumpInput.value);
+            const totalWords = isViewingFavorites ? favoriteWords.length : words.length;
+            
+            if (isNaN(jumpNumber)) {
+                alert('숫자를 입력해주세요.');
+                return;
+            }
+            
+            if (jumpNumber < 1 || jumpNumber > totalWords) {
+                alert(`1부터 ${totalWords}까지의 숫자를 입력해주세요.`);
+                return;
+            }
+            
+            currentIndex = jumpNumber - 1; // 0부터 시작하므로 1을 빼기
+            jumpInput.value = ''; // 입력창 초기화
+            updateDisplay();
+            
+            // 성공 메시지
+            const wordNumber = currentIndex + 1;
+            const currentWordList = isViewingFavorites ? favoriteWords : words;
+            const currentWord = currentWordList[currentIndex].word;
+            const modeText = isViewingFavorites ? '찜한 단어' : '단어';
+            alert(`${modeText} ${wordNumber}번 "${currentWord}"로 이동했습니다!`);
+        }
+        function addWord() {
+            const word = newWordInput.value.trim();
+            const phonetic = newPhoneticInput.value.trim();
+            const koreanSound = newKoreanSoundInput.value.trim();
+            const meaning = newMeaningInput.value.trim();
+            
+            if (word && meaning) {
+                words.push({ 
+                    word: word.toLowerCase(), 
+                    meaning: meaning,
+                    phonetic: phonetic,
+                    koreanSound: koreanSound
+                });
+                saveWords();
+                
+                // 입력 필드 초기화
+                newWordInput.value = '';
+                newPhoneticInput.value = '';
+                newKoreanSoundInput.value = '';
+                newMeaningInput.value = '';
+                
+                // 추가된 단어로 이동
+                currentIndex = words.length - 1;
+                updateDisplay();
+                
+                alert('새 단어가 추가되었습니다!');
+            } else {
+                alert('영어 단어와 뜻은 필수로 입력해주세요.');
+            }
+        }
+
+        // 이벤트 리스너
+        showMeaningBtn.addEventListener('click', toggleMeaning);
+        speakBtn.addEventListener('click', speakWord);
+        favoriteBtn.addEventListener('click', toggleFavorite);
+        prevBtn.addEventListener('click', prevWord);
+        nextBtn.addEventListener('click', nextWord);
+        jumpBtn.addEventListener('click', jumpToWord);
+        
+        // 찜한 단어 보기/전체 단어 보기 토글
+        showFavoritesBtn.addEventListener('click', () => {
+            if (isViewingFavorites) {
+                showAllWords();
+            } else {
+                showFavorites();
+            }
+        });
+
+        // 키보드 단축키
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') prevWord();
+            if (e.key === 'ArrowRight') nextWord();
+            if (e.key === ' ') {
+                e.preventDefault();
+                toggleMeaning();
+            }
+            if (e.key === 'Enter' && e.target !== jumpInput) {
+                e.preventDefault();
+                speakWord();
+            }
+            if (e.key === 's' || e.key === 'S') {
+                e.preventDefault();
+                toggleFavorite();
+            }
+        });
+
+        // 터치 이벤트 리스너 (스와이프)
+        card.addEventListener('touchstart', handleTouchStart, { passive: false });
+        card.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+        // Enter 키로 단어 이동
+        jumpInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') jumpToWord();
+        });
+
+        // 터치 이벤트 처리
+        function handleTouchStart(e) {
+            touchStartX = e.changedTouches[0].clientX;
+            touchStartY = e.changedTouches[0].clientY;
+        }
+
+        function handleTouchEnd(e) {
+            touchEndX = e.changedTouches[0].clientX;
+            touchEndY = e.changedTouches[0].clientY;
+            
+            const swipeDistanceX = touchEndX - touchStartX;
+            const swipeDistanceY = touchEndY - touchStartY;
+            
+            // 스와이프인지 탭인지 판단
+            const totalDistance = Math.sqrt(swipeDistanceX * swipeDistanceX + swipeDistanceY * swipeDistanceY);
+            
+            if (totalDistance < 10) {
+                // 탭으로 판단 (거의 움직이지 않음)
+                handleTap();
+            } else {
+                // 스와이프로 판단
+                handleSwipe();
+            }
+        }
+
+        function handleTap() {
+            // 카드를 탭하면 뜻 보기/숨기기
+            toggleMeaning();
+            
+            // 탭 피드백 (카드에 살짝 효과)
+            card.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                card.style.transform = '';
+            }, 150);
+        }
+
+        function handleSwipe() {
+            const swipeDistanceX = touchEndX - touchStartX;
+            const swipeDistanceY = touchEndY - touchStartY;
+            
+            // 세로 스와이프가 가로 스와이프보다 크면 무시 (스크롤과 구분)
+            if (Math.abs(swipeDistanceY) > Math.abs(swipeDistanceX)) {
+                return;
+            }
+            
+            // 최소 스와이프 거리 체크
+            if (Math.abs(swipeDistanceX) < minSwipeDistance) {
+                return;
+            }
+            
+            // 스와이프 방향에 따라 단어 이동
+            if (swipeDistanceX > 0) {
+                // 오른쪽으로 스와이프 → 이전 단어
+                prevWord();
+                // 스와이프 피드백 (카드에 애니메이션 효과)
+                card.style.transform = 'translateX(10px)';
+                setTimeout(() => {
+                    card.style.transform = '';
+                }, 200);
+            } else {
+                // 왼쪽으로 스와이프 → 다음 단어
+                nextWord();
+                // 스와이프 피드백 (카드에 애니메이션 효과)
+                card.style.transform = 'translateX(-10px)';
+                setTimeout(() => {
+                    card.style.transform = '';
+                }, 200);
+            }
+        }
+        loadWords();
+        loadFavorites(); // 찜한 단어 불러오기
+        loadCurrentIndex(); // 이전 위치 불러오기
+        updateDisplay();
+    </script>
+</body>
+</html>
